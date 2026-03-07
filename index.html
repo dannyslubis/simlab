@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Prototipe Game 16:9 - Tile Based</title>
+    <title>Game Lab Kimia - Stoikiometri</title>
     <style>
         /* Mengatur layar agar game berada di tengah dengan latar gelap */
         body {
@@ -13,7 +13,7 @@
             height: 100vh;
             background-color: #1a1a1a;
             margin: 0;
-            overflow: hidden; /* Mencegah scroll di mobile */
+            overflow: hidden;
             font-family: sans-serif;
         }
 
@@ -21,21 +21,13 @@
         #game-container {
             width: 512px;
             height: 288px;
-            background-color: #ffffff; /* Latar kanvas putih bersih */
+            /* Menggunakan kanvaslab.png sebagai latar belakang ruangan */
+            background-image: url('kanvaslab.png');
+            background-size: cover;
             position: relative;
-            image-rendering: pixelated; /* Menjaga grafis pixel tetap tajam */
+            image-rendering: pixelated;
             border: 2px solid #555;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-
-        /* Latar lantai 3x3 tiles */
-        #floor-tiles {
-            position: absolute;
-            width: 96px; /* 3 tile x 32px */
-            height: 96px;
-            /* Posisi di grid H4 (Col 8, Row 4) -> X: 7*32, Y: 3*32 */
-            left: 224px; 
-            top: 96px;
         }
 
         /* Karakter Utama */
@@ -43,15 +35,13 @@
             position: absolute;
             width: 32px;
             height: 32px;
-            /* Posisi awal di I5 (Tengah: Col 9, Row 5) -> Index: X:8, Y:4 */
-            left: 256px;
-            top: 128px;
-            /* Transisi CSS ini yang membuat pergerakan mulus dari tile ke tile */
-            transition: left 0.3s linear, top 0.3s linear;
+            /* Kita mulai/spawn karakter di koordinat b2 (X:1, Y:1) yang merupakan area putih */
+            left: 32px;
+            top: 32px;
+            transition: left 0.25s linear, top 0.25s linear;
             z-index: 10;
         }
 
-        /* Class untuk membalik arah muka karakter ke kiri */
         .face-left {
             transform: scaleX(-1);
         }
@@ -59,27 +49,36 @@
         /* Wadah Kontrol D-Pad untuk Mobile */
         #dpad-container {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
-            width: 96px; /* Asumsi ukuran visual tombol, bisa disesuaikan */
-            height: 96px;
+            bottom: -110px; /* Diposisikan di luar kanvas agar tidak menutupi game saat di mobile */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px; 
+            height: 120px;
             background-image: url('keywasd.png');
             background-size: contain;
             background-repeat: no-repeat;
             z-index: 20;
         }
 
-        /* Zona klik transparan di atas gambar keywasd.png */
+        /* Menyesuaikan CSS mobile agar D-Pad terlihat jika layar di-resize (opsional) */
+        @media (max-height: 500px) {
+            #dpad-container {
+                bottom: 10px;
+                left: 10px;
+                transform: none;
+                width: 96px;
+                height: 96px;
+                opacity: 0.7; /* Sedikit transparan jika menutupi layar game */
+            }
+        }
+
         .d-btn {
             position: absolute;
             width: 33%;
             height: 33%;
             cursor: pointer;
-            /* Uncomment baris di bawah ini jika ingin melihat zona kliknya */
-            /* border: 1px solid red; */
         }
 
-        /* Posisi masing-masing zona klik panah */
         #btn-up { top: 0; left: 33.3%; }
         #btn-down { bottom: 0; left: 33.3%; }
         #btn-left { top: 33.3%; left: 0; }
@@ -89,8 +88,6 @@
 <body>
 
     <div id="game-container">
-        <img src="3x3tile.png" id="floor-tiles" alt="Lantai">
-        
         <img src="stay.png" id="player" alt="Karakter">
 
         <div id="dpad-container">
@@ -104,59 +101,69 @@
     <script>
         const playerElement = document.getElementById('player');
         
-        // --- KONFIGURASI GRID ---
         const TILE_SIZE = 32;
-        // Batas ruang gerak 3x3 (H4 sampai J6)
-        // Kolom A=0, B=1... H=7, I=8, J=9. Baris 1=0, 2=1... 4=3, 5=4, 6=5
-        const MIN_COL = 7; 
-        const MAX_COL = 9;
-        const MIN_ROW = 3;
-        const MAX_ROW = 5;
-
-        // Posisi awal di I5 (tengah area 3x3)
-        let currentCol = 8; 
-        let currentRow = 4;
         
-        let isMoving = false; // Mencegah input saat karakter masih berjalan
+        // --- PETA KOORDINAT (COLLISION MAP) ---
+        // 0 = Area Putih (Bisa berjalan)
+        // 1 = Area Kuning (Tembok/Objek, tidak bisa berjalan)
+        // Kolom/Index: a=0, b=1, c=2 ... p=15
+        const collisionMap = [
+            // a  b  c  d  e  f  g  h  i  j  k  l  m  n  o  p
+            [  1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1 ], // Baris 1 (Index 0)
+            [  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], // Baris 2 (Index 1)
+            [  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], // Baris 3 (Index 2)
+            [  1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], // Baris 4 (Index 3)
+            [  1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1 ], // Baris 5 (Index 4)
+            [  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ], // Baris 6 (Index 5)
+            [  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], // Baris 7 (Index 6)
+            [  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1 ], // Baris 8 (Index 7)
+            [  0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1 ]  // Baris 9 (Index 8)
+        ];
+
+        // Posisi awal karakter di b2 (Kolom 1, Baris 1)
+        let currentCol = 1; 
+        let currentRow = 1;
+        
+        let isMoving = false; 
         let isFacingRight = true;
 
-        // --- FUNGSI PERGERAKAN ---
         function movePlayer(dCol, dRow) {
-            if (isMoving) return; // Kunci pergerakan jika animasi sedang berjalan
+            if (isMoving) return;
 
-            // Hitung target koordinat
             let targetCol = currentCol + dCol;
             let targetRow = currentRow + dRow;
 
-            // Cek apakah target masih di dalam batas tiles (H4-J6)
-            if (targetCol >= MIN_COL && targetCol <= MAX_COL && 
-                targetRow >= MIN_ROW && targetRow <= MAX_ROW) {
+            // 1. Cek apakah target masih di dalam kanvas (0-15 untuk X, 0-8 untuk Y)
+            if (targetCol >= 0 && targetCol <= 15 && targetRow >= 0 && targetRow <= 8) {
                 
-                isMoving = true;
-                currentCol = targetCol;
-                currentRow = targetRow;
+                // 2. Cek apakah koordinat target adalah 0 (bisa dilewati)
+                if (collisionMap[targetRow][targetCol] === 0) {
+                    isMoving = true;
+                    currentCol = targetCol;
+                    currentRow = targetRow;
 
-                // Mengatur arah hadap karakter
-                if (dCol === 1 && !isFacingRight) {
-                    playerElement.classList.remove('face-left');
-                    isFacingRight = true;
-                } else if (dCol === -1 && isFacingRight) {
-                    playerElement.classList.add('face-left');
-                    isFacingRight = false;
+                    // Atur arah muka
+                    if (dCol === 1 && !isFacingRight) {
+                        playerElement.classList.remove('face-left');
+                        isFacingRight = true;
+                    } else if (dCol === -1 && isFacingRight) {
+                        playerElement.classList.add('face-left');
+                        isFacingRight = false;
+                    }
+
+                    // Mainkan animasi walk.gif
+                    playerElement.src = "walk.gif";
+
+                    // Pindahkan karakter
+                    playerElement.style.left = (currentCol * TILE_SIZE) + "px";
+                    playerElement.style.top = (currentRow * TILE_SIZE) + "px";
+
+                    // Hentikan animasi setelah 250ms (sesuai transition CSS)
+                    setTimeout(() => {
+                        playerElement.src = "stay.png";
+                        isMoving = false;
+                    }, 250);
                 }
-
-                // Ganti gambar ke animasi berjalan
-                playerElement.src = "walk.gif";
-
-                // Pindahkan posisi secara visual (CSS transition akan membuatnya mulus)
-                playerElement.style.left = (currentCol * TILE_SIZE) + "px";
-                playerElement.style.top = (currentRow * TILE_SIZE) + "px";
-
-                // Kembalikan ke posisi diam (stay.png) setelah animasi gerak selesai (300ms)
-                setTimeout(() => {
-                    playerElement.src = "stay.png";
-                    isMoving = false;
-                }, 300); // Waktu ini sejalan dengan CSS 'transition: 0.3s'
             }
         }
 
@@ -169,14 +176,12 @@
             if (key === 'd' || key === 'arrowright') movePlayer(1, 0);
         });
 
-        // --- KENDALI D-PAD MOBILE (TOUCH / MOUSE) ---
-        // Menggunakan 'pointerdown' agar responsif di layar sentuh maupun klik mouse
+        // --- KENDALI D-PAD MOBILE ---
         document.getElementById('btn-up').addEventListener('pointerdown', () => movePlayer(0, -1));
         document.getElementById('btn-down').addEventListener('pointerdown', () => movePlayer(0, 1));
         document.getElementById('btn-left').addEventListener('pointerdown', () => movePlayer(-1, 0));
         document.getElementById('btn-right').addEventListener('pointerdown', () => movePlayer(1, 0));
 
-        // Mencegah menu konteks (klik kanan/tahan) muncul saat memencet D-Pad di mobile
         document.getElementById('dpad-container').addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>
