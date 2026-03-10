@@ -28,7 +28,7 @@
 
         .fullscreen-ui {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 20; background-size: cover;
+            pointer-events: none; z-index: 20; background-size: cover; image-rendering: pixelated;
         }
 
         #statlog-img { background-image: url('statlog.png'); opacity: 0.5; }
@@ -69,19 +69,31 @@
         .log-natori { color: #00ffff; }
         .log-warning { color: #ffff00; }
         .log-mind { color: #ff0090; font-style: italic; opacity: 0.9; }
-        .log-iteminfo { color: #00ff00; } /* Warna Hijau Lime Baru! */
+        .log-iteminfo { color: #00ff00; }
 
         #dim-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.7); z-index: 50; display: none;
             pointer-events: auto;
         }
+
+        /* --- MENU MODAL SETTING (Skala Penuh) --- */
         #settings-modal {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 140px; height: 100px; z-index: 60; display: none;
-            background-image: url('setting1.png'); background-size: 100% 100%; pointer-events: auto;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 60; display: none; background-image: url('setting1.png'); 
+            background-size: cover; image-rendering: pixelated; pointer-events: none;
         }
-        .modal-btn { width: 100%; height: 33.3%; cursor: pointer; }
+        
+        /* Hitbox Tombol Setting di Tengah Layar */
+        .setting-hitbox {
+            position: absolute; left: 186px; width: 140px; height: 26px;
+            cursor: pointer; z-index: 65; pointer-events: auto;
+            /* Hapus tanda komentar di bawah jika ingin melihat letak kotak untuk disesuaikan */
+            /* border: 1px solid blue; */
+        }
+        #hitbox-kembali { top: 96px; }
+        #hitbox-hud { top: 130px; }
+        #hitbox-keluar { top: 164px; }
 
         #cutscene-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -91,7 +103,7 @@
         /* --- TITLE SCREEN STYLES --- */
         #titlescreen-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 150; pointer-events: auto; background-color: #cce6f4; /* Warna dasar jaga-jaga */
+            z-index: 150; pointer-events: auto; background-color: #cce6f4; 
         }
         .title-img {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -100,23 +112,20 @@
         #title-bg { background-image: url('titlescreen.png'); }
         #title-keys { background-image: url('titlekey.png'); }
 
-        /* Hitbox Tombol Title Screen (Tebakan koordinat presisi tengah) */
         .title-hitbox {
             position: absolute; left: 186px; width: 140px; height: 32px;
             cursor: pointer; z-index: 155;
-            /* Border merah untuk mempermudah tes posisi, hapus/komen baris bawah nanti! */
-            /* border: 1px solid red; */ 
         }
         #hitbox-mulai { top: 128px; }
         #hitbox-kredit { top: 162px; }
 
-        /* Animasi Memudar (Fade-out) */
+        /* Animasi Memudar 3 Detik */
         @keyframes fadeOut {
             from { opacity: 1; }
             to { opacity: 0; visibility: hidden; }
         }
         .fade-out {
-            animation: fadeOut 1s forwards;
+            animation: fadeOut 3s forwards;
             pointer-events: none !important;
         }
     </style>
@@ -162,10 +171,11 @@
         <div id="btn-setting-hitbox" onclick="toggleSettings()"></div>
 
         <div id="dim-overlay" onclick="toggleSettings()"></div>
+        
         <div id="settings-modal">
-            <div class="modal-btn" onclick="toggleSettings()"></div>
-            <div class="modal-btn" onclick="toggleHud()"></div>
-            <div class="modal-btn" onclick="exitGame()"></div>
+            <div id="hitbox-kembali" class="setting-hitbox" onclick="toggleSettings()"></div>
+            <div id="hitbox-hud" class="setting-hitbox" onclick="toggleHud()"></div>
+            <div id="hitbox-keluar" class="setting-hitbox" onclick="exitGame()"></div>
         </div>
 
         <img id="cutscene-layer" src="" alt="Cutscene">
@@ -198,31 +208,23 @@
         let isMoving = false; let isFacingRight = true;
         let inCutscene = false; let isSettingsOpen = false;
         let isHudHidden = false; let hasEggKey = false;
-        
-        // Status Layar Judul
         let inTitleScreen = true; 
 
         const activeKeys = { up: false, down: false, left: false, right: false };
 
-        // --- SISTEM TITLE SCREEN ---
         function startGame() {
             if (!inTitleScreen) return;
             inTitleScreen = false;
-            // Tambahkan class memudar ke layer title screen
             titleScreenLayer.classList.add('fade-out');
-            
-            // Hapus element dari sistem setelah 1 detik (agar tidak mengganggu klik di game)
             setTimeout(() => {
                 titleScreenLayer.style.display = 'none';
-            }, 1000);
+            }, 3000); // Waktu diubah menjadi 3000 ms (3 detik)
         }
 
         function showCredit() {
-            // Tempat disiapkannya layer-by-layer kredit nanti
             console.log("Tombol Kredit ditekan! Fitur akan datang.");
         }
 
-        // --- SISTEM STATUS LOG ---
         const logQueue = [];
         let isTyping = false;
 
@@ -260,7 +262,6 @@
             processLog();
         }
 
-        // --- MANAJEMEN EVENT ---
         const triggeredEvents = { start: false, doorMain: false, closetN8: false, labArea: false, doorLab: false, natoriIntro: false };
 
         function checkEvents() {
@@ -296,7 +297,6 @@
             }
         }
 
-        // --- SISTEM UI SETTING ---
         function toggleSettings() {
             if (inCutscene || inTitleScreen) return;
             isSettingsOpen = !isSettingsOpen;
@@ -314,9 +314,14 @@
             toggleSettings(); 
         }
 
-        function exitGame() { console.log("Keluar dari permainan..."); }
+        function exitGame() { 
+            // Fungsi untuk mengembalikan pemain ke Title Screen
+            toggleSettings(); // Tutup modal setting dulu
+            inTitleScreen = true;
+            titleScreenLayer.style.display = 'block';
+            titleScreenLayer.classList.remove('fade-out'); // Hilangkan animasi memudar agar solid kembali
+        }
 
-        // --- SISTEM PERGERAKAN ---
         function movePlayer(dCol, dRow) {
             let targetCol = currentCol + dCol; let targetRow = currentRow + dRow;
             if (targetCol >= 0 && targetCol <= 15 && targetRow >= 0 && targetRow <= 8) {
@@ -361,13 +366,11 @@
             if (isMoving) return; 
             const tilePos = `${currentCol},${currentRow}`;
 
-            // --- INFO ITEM (Hijau Lime) ---
             if (tilePos === "8,0") { addLog('iteminfo', 'APAR / Alat Pemadam Api Ringan. Benda ini untuk memadamkan kebakaran kecil secara cepat.'); return; }
             if (tilePos === "0,8") { addLog('iteminfo', 'Pancuran Darurat dan Air Mancur Pencuci Mata. Fasilitas ini dirancang untuk dekontaminasi segera ketika seseorang terpapar bahan berbahaya.'); return; }
             if (tilePos === "0,1") { addLog('iteminfo', 'Tempat Sampah. Benda ini digunakan untuk tempat pembuangan limbah padat.'); return; }
             if (tilePos === "9,0") { addLog('iteminfo', 'Kotak P3K. Berisi alat medis dan obat-obatan untuk penanganan kecelakaan kerja.'); return; }
 
-            // --- AKSI LAINNYA ---
             if (tilePos === "9,8" && !hasEggKey) {
                 hasEggKey = true; document.getElementById('egg-key').style.display = 'none';
                 addLog('mind', '*Kunci apa ini? Terasa sangat dingin... Natori sepertinya tidak menyadarinya.*');
