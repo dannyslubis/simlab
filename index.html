@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Game Lab Kimia - Stoikiometri</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         body {
             display: flex;
@@ -25,122 +26,152 @@
             image-rendering: pixelated;
             border: 2px solid #555;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            /* Menyembunyikan elemen yang keluar dari kotak layar game */
             overflow: hidden; 
         }
 
-        .marker {
-            position: absolute;
-            width: 32px;
-            height: 32px;
-        }
-
-        /* Natori berada di z-index 5 */
+        .marker { position: absolute; width: 32px; height: 32px; }
         #natori { z-index: 5; }
-        
-        /* Kunci rahasia disembunyikan di z-index 4 (Di bawah Natori) */
         #egg-key { z-index: 4; }
 
         #player {
             position: absolute;
             width: 32px;
             height: 32px;
-            left: 32px; /* Posisi awal b2 */
-            top: 32px;
             transition: left 0.25s linear, top 0.25s linear;
             z-index: 10;
         }
 
         .face-left { transform: scaleX(-1); }
 
-        /* UI Kontrol */
-        #dpad-container {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            width: 96px; 
-            height: 96px;
-            background-image: url('keywasd.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            z-index: 20;
-            opacity: 0.5;
+        /* --- LAYER HUD (Bisa Disembunyikan) --- */
+        #hud-layer {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 20; pointer-events: none;
         }
 
-        .d-btn {
-            position: absolute;
-            width: 33%;
-            height: 33%;
-            cursor: pointer;
+        /* D-Pad & Action (Pointer-events dikembalikan agar bisa diklik) */
+        #dpad-container, #btn-action { pointer-events: auto; }
+        
+        #dpad-container {
+            position: absolute; bottom: 10px; left: 10px; width: 96px; height: 96px;
+            background-image: url('keywasd.png'); background-size: contain; opacity: 0.5;
         }
+        .d-btn { position: absolute; width: 33%; height: 33%; cursor: pointer; }
         #btn-up { top: 0; left: 33.3%; }
         #btn-down { bottom: 0; left: 33.3%; }
         #btn-left { top: 33.3%; left: 0; }
         #btn-right { top: 33.3%; right: 0; }
 
         #btn-action {
-            position: absolute;
-            bottom: 26px; 
-            right: 15px;
-            width: 64px;
-            height: 64px;
-            background-image: url('keyaction.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            z-index: 20;
-            opacity: 0.5;
-            cursor: pointer;
+            position: absolute; bottom: 26px; right: 15px; width: 64px; height: 64px;
+            background-image: url('keyaction.png'); background-size: contain; opacity: 0.5; cursor: pointer;
         }
+
+        /* --- UI STATUS LOG --- */
+        #statlog-wrapper {
+            position: absolute; top: 10px; left: 10px; width: 220px; height: 75px;
+        }
+        /* Latar semi transparan dipisah agar teks tetap solid */
+        #statlog-bg {
+            position: absolute; width: 100%; height: 100%; 
+            background-image: url('statlog.png'); background-size: 100% 100%; opacity: 0.5;
+        }
+        #statlog-content {
+            position: absolute; top: 8px; left: 12px; right: 8px; bottom: 8px;
+            overflow-y: auto; font-family: 'VT323', monospace; font-size: 14px; 
+            line-height: 1.1; text-shadow: 1px 1px 0 #000;
+        }
+        /* Menyembunyikan scrollbar agar estetika retro terjaga */
+        #statlog-content::-webkit-scrollbar { display: none; }
+
+        /* Warna Teks Log */
+        .log-status { color: #ffffff; }
+        .log-kurori { color: #ff0090; }
+        .log-natori { color: #00ffff; }
+        .log-warning { color: #ffff00; }
+        .log-mind { color: #ff0090; font-style: italic; opacity: 0.9; }
+
+        /* --- UI PROFILE & SETTING --- */
+        #profile-wrapper {
+            position: absolute; top: 10px; right: 45px; width: 130px; height: 35px;
+            background-image: url('statprofile.png'); background-size: 100% 100%;
+            pointer-events: auto; z-index: 21;
+        }
+        
+        #btn-setting {
+            position: absolute; top: 10px; right: 10px; width: 35px; height: 35px;
+            background-image: url('keysetting.png'); background-size: 100% 100%;
+            cursor: pointer; z-index: 25; pointer-events: auto;
+        }
+
+        /* --- MENU MODAL SETTING --- */
+        #settings-modal {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 140px; height: 100px; z-index: 60; display: none;
+            background-image: url('setting1.png'); background-size: 100% 100%;
+        }
+        /* Tombol Transparan di atas Modal */
+        .modal-btn { width: 100%; height: 33.3%; cursor: pointer; }
 
         /* --- LAYAR CUTSCENE / EASTER EGG --- */
         #cutscene-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 100; /* Menutupi semua isi game */
-            display: none;
-            background-color: black;
-            image-rendering: pixelated;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 100; display: none; background-color: black; image-rendering: pixelated;
         }
     </style>
 </head>
 <body>
 
     <div id="game-container">
+        <div id="hud-layer">
+            <div id="statlog-wrapper">
+                <div id="statlog-bg"></div>
+                <div id="statlog-content"></div>
+            </div>
+            <div id="profile-wrapper"></div>
+            
+            <div id="dpad-container">
+                <div id="btn-up" class="d-btn"></div>
+                <div id="btn-down" class="d-btn"></div>
+                <div id="btn-left" class="d-btn"></div>
+                <div id="btn-right" class="d-btn"></div>
+            </div>
+            <div id="btn-action"></div>
+        </div>
+
+        <div id="btn-setting"></div>
+
+        <div id="settings-modal">
+            <div class="modal-btn" onclick="toggleSettings()"></div>
+            <div class="modal-btn" onclick="toggleHud()"></div>
+            <div class="modal-btn" onclick="exitGame()"></div>
+        </div>
+
         <img id="cutscene-layer" src="" alt="Cutscene">
-
         <img src="eggkey.png" id="egg-key" class="marker" style="left: 288px; top: 256px;" alt="Rahasia">
-
         <img src="standn.gif" id="natori" class="marker" style="left: 288px; top: 256px;" alt="Natori">
 
         <img src="circleexit.gif" class="marker" style="left: 288px; top: 32px; z-index: 2;" alt="Exit">
-        <img src="circleinfo.gif" class="marker" style="left: 256px; top: 224px; z-index: 2;" alt="Info i8"> 
-        <img src="circleinfo.gif" class="marker" style="left: 416px; top: 224px; z-index: 2;" alt="Info n8"> 
+        <img src="circleinfo.gif" class="marker" style="left: 256px; top: 224px; z-index: 2;" alt="Info"> 
+        <img src="circleinfo.gif" class="marker" style="left: 416px; top: 224px; z-index: 2;" alt="Info"> 
         
-        <img src="circlequest.gif" class="marker" style="left: 0px; top: 64px; z-index: 2;" alt="Quest a3">   
-        <img src="circlequest.gif" class="marker" style="left: 0px; top: 160px; z-index: 2;" alt="Quest a6">  
-        <img src="circlequest.gif" class="marker" style="left: 96px; top: 160px; z-index: 2;" alt="Quest d6"> 
-        <img src="circlequest.gif" class="marker" style="left: 96px; top: 256px; z-index: 2;" alt="Quest d9"> 
-        <img src="circlequest.gif" class="marker" style="left: 160px; top: 32px; z-index: 2;" alt="Quest f2"> 
-        <img src="circlequest.gif" class="marker" style="left: 160px; top: 160px; z-index: 2;" alt="Quest f6">
-        <img src="circlequest.gif" class="marker" style="left: 192px; top: 256px; z-index: 2;" alt="Quest g9">
+        <img src="circlequest.gif" class="marker" style="left: 0px; top: 64px; z-index: 2;" alt="Quest">   
+        <img src="circlequest.gif" class="marker" style="left: 0px; top: 160px; z-index: 2;" alt="Quest">  
+        <img src="circlequest.gif" class="marker" style="left: 96px; top: 160px; z-index: 2;" alt="Quest"> 
+        <img src="circlequest.gif" class="marker" style="left: 96px; top: 256px; z-index: 2;" alt="Quest"> 
+        <img src="circlequest.gif" class="marker" style="left: 160px; top: 32px; z-index: 2;" alt="Quest"> 
+        <img src="circlequest.gif" class="marker" style="left: 160px; top: 160px; z-index: 2;" alt="Quest">
+        <img src="circlequest.gif" class="marker" style="left: 192px; top: 256px; z-index: 2;" alt="Quest">
 
-        <img src="stay.png" id="player" alt="Karakter">
-
-        <div id="dpad-container">
-            <div id="btn-up" class="d-btn"></div>
-            <div id="btn-down" class="d-btn"></div>
-            <div id="btn-left" class="d-btn"></div>
-            <div id="btn-right" class="d-btn"></div>
-        </div>
-        <div id="btn-action"></div>
+        <img src="stay.png" id="player" alt="Karakter" style="left: 416px; top: 32px;"> 
     </div>
 
     <script>
         const playerElement = document.getElementById('player');
         const cutsceneLayer = document.getElementById('cutscene-layer');
+        const logContent = document.getElementById('statlog-content');
+        const settingsModal = document.getElementById('settings-modal');
+        const hudLayer = document.getElementById('hud-layer');
+        
         const TILE_SIZE = 32;
         
         const collisionMap = [
@@ -155,16 +186,131 @@
             [  0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1 ] 
         ];
 
-        let currentCol = 1; 
+        // Posisi Awal n2 -> (Kolom 13, Baris 1)
+        let currentCol = 13; 
         let currentRow = 1;
         let isMoving = false; 
         let isFacingRight = true;
-
-        // Status Mode Game & Item
         let inCutscene = false;
+        let isSettingsOpen = false;
+        let isHudHidden = false;
         let hasEggKey = false;
         
         const activeKeys = { up: false, down: false, left: false, right: false };
+
+        // --- SISTEM STATUS LOG & TYPEWRITER ---
+        const logQueue = [];
+        let isTyping = false;
+
+        async function processLog() {
+            if (isTyping || logQueue.length === 0) return;
+            isTyping = true;
+            
+            const { type, text } = logQueue.shift();
+            const logLine = document.createElement('div');
+            logLine.className = `log-${type}`;
+            
+            // Format teks nama karakter
+            let prefix = "";
+            if (type === 'kurori') prefix = "Kurori: ";
+            else if (type === 'natori') prefix = "Natori: ";
+            else if (type === 'status') prefix = "[Status] ";
+            else if (type === 'warning') prefix = "[INFO] ";
+
+            logContent.appendChild(logLine);
+            
+            const fullText = prefix + text;
+            for (let i = 0; i < fullText.length; i++) {
+                logLine.innerHTML += fullText.charAt(i);
+                logContent.scrollTop = logContent.scrollHeight; // Auto-scroll ke bawah
+                await new Promise(r => setTimeout(r, 20)); // Kecepatan ketik (20ms per huruf)
+            }
+            
+            await new Promise(r => setTimeout(r, 500)); // Jeda antar kalimat
+            isTyping = false;
+            processLog();
+        }
+
+        function addLog(type, text) {
+            logQueue.push({ type, text });
+            processLog();
+        }
+
+        // --- MANAJEMEN EVENT & TRIGGER ---
+        const triggeredEvents = {
+            start: false, doorMain: false, closetN8: false,
+            labArea: false, doorLab: false, natoriIntro: false
+        };
+
+        function checkEvents() {
+            const pos = `${currentCol},${currentRow}`;
+
+            // Awal permainan
+            if (!triggeredEvents.start) {
+                triggeredEvents.start = true;
+                addLog('status', 'memuat map...');
+                addLog('kurori', 'cuaca yang cerah untuk hari yang luar biasa!');
+                addLog('kurori', 'hari ini adalah hari pertamaku ke laboratorium');
+                addLog('kurori', 'semoga aku beruntung hari ini :3');
+            }
+
+            // Melewati m5 atau n5
+            if (!triggeredEvents.doorMain && (pos === '12,4' || pos === '13,4')) {
+                triggeredEvents.doorMain = true;
+                addLog('status', 'melewati pintu utama');
+            }
+
+            // Menginjak n8
+            if (!triggeredEvents.closetN8 && pos === '13,7') {
+                triggeredEvents.closetN8 = true;
+                addLog('kurori', 'wah lemari apa itu? tampaknya menarik.');
+            }
+
+            // Menginjak l6, l7, atau l8
+            if (!triggeredEvents.labArea && (pos === '11,5' || pos === '11,6' || pos === '11,7')) {
+                triggeredEvents.labArea = true;
+                addLog('kurori', 'laboratorium kimia, benarkah ini ruangannya?');
+            }
+
+            // Melewati k7
+            if (!triggeredEvents.doorLab && pos === '10,6') {
+                triggeredEvents.doorLab = true;
+                addLog('status', 'melewati pintu laboratorium kimia dasar');
+            }
+
+            // Menginjak j7
+            if (!triggeredEvents.natoriIntro && pos === '9,6') {
+                triggeredEvents.natoriIntro = true;
+                addLog('kurori', 'permisi... apakah benar ini ruang laboratorium kimia?');
+                addLog('natori', 'iya benar ini ruangannya');
+                addLog('natori', 'selamat datang diruang laboratorium kimia');
+                addLog('natori', 'perkenalkan nama saya natori, saya adalah laboran disini');
+                addLog('natori', 'jika kamu perlu bantuanku, aku ada disini untuk membantu!');
+                addLog('natori', 'senang bertemu denganmu!');
+                addLog('kurori', 'senang bertemu denganmu juga!');
+            }
+        }
+
+        // --- SISTEM UI SETTING ---
+        document.getElementById('btn-setting').addEventListener('pointerdown', toggleSettings);
+        
+        function toggleSettings() {
+            if (inCutscene) return;
+            isSettingsOpen = !isSettingsOpen;
+            settingsModal.style.display = isSettingsOpen ? 'block' : 'none';
+        }
+
+        function toggleHud() {
+            isHudHidden = !isHudHidden;
+            hudLayer.style.display = isHudHidden ? 'none' : 'block';
+            // Ganti latar modal sesuai status HUD
+            settingsModal.style.backgroundImage = isHudHidden ? "url('setting0.png')" : "url('setting1.png')";
+        }
+
+        function exitGame() {
+            console.log("Keluar dari permainan...");
+            // Fitur ini akan dikerjakan nanti
+        }
 
         // --- SISTEM PERGERAKAN ---
         function movePlayer(dCol, dRow) {
@@ -197,94 +343,63 @@
             }
         }
 
-        // --- SISTEM HELPER UNTUK CUTSCENE (JANJI/PROMISE) ---
-        // Fungsi untuk menunda eksekusi (delay)
         const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-        // Fungsi khusus agar kita bisa men-skip layer, atau lanjut otomatis jika waktu habis
         let skipResolver = null;
         const waitForSkipOrTimeout = (ms) => new Promise(resolve => {
-            // Pasang timer
-            let timeout = setTimeout(() => {
-                skipResolver = null; // Hapus akses skip
-                resolve();           // Lanjut otomatis
-            }, ms);
-            
-            // Simpan "tombol pemutus" (skip) di memori global
-            skipResolver = () => {
-                clearTimeout(timeout); // Matikan timer
-                skipResolver = null;   
-                resolve();             // Lanjut instan
-            };
+            let timeout = setTimeout(() => { skipResolver = null; resolve(); }, ms);
+            skipResolver = () => { clearTimeout(timeout); skipResolver = null; resolve(); };
         });
 
-        // --- LOGIKA UTAMA EASTER EGG ---
+        // --- EASTER EGG CUTSCENE ---
         async function playEasterEgg() {
-            // Kunci semua pergerakan
             inCutscene = true;
+            hudLayer.style.display = 'none'; // Sembunyikan HUD
+            document.getElementById('btn-setting').style.display = 'none'; // Sembunyikan tombol setting
             activeKeys.up = activeKeys.down = activeKeys.left = activeKeys.right = false;
 
-            // Step 1: Delay 1 detik lalu buka pintu
             await delay(1000);
-            cutsceneLayer.src = "egglayer1open.png";
-            cutsceneLayer.style.display = "block";
-
-            // Step 2: Transisi 1 detik ke layer 2
-            await delay(1000);
-            cutsceneLayer.src = "egglayer2.png";
-
-            // Step 3: Muncul textbox di layer 3, tunggu klik skip atau otomatis 5 detik
-            await delay(2000);
-            cutsceneLayer.src = "egglayer3.png";
+            cutsceneLayer.src = "egglayer1open.png"; cutsceneLayer.style.display = "block";
+            await delay(1000); cutsceneLayer.src = "egglayer2.png";
+            await delay(2000); cutsceneLayer.src = "egglayer3.png";
             await waitForSkipOrTimeout(5000);
-
-            // Step 4: Transisi ke GIF horor selama 6 detik (tidak bisa di-skip agar efek horornya maksimal)
-            cutsceneLayer.src = "egglayer4.gif";
-            await delay(6000);
-
-            // Step 5: Muncul teriakan Kurori, tunggu klik skip atau otomatis 5 detik
-            cutsceneLayer.src = "egglayer5.png";
-            await waitForSkipOrTimeout(5000);
-
-            // Step 6: Tampilkan gambar gigi misterius selama 3 detik
-            cutsceneLayer.src = "egglayer6.png";
-            await delay(3000);
-
-            // Step 7: GAME OVER. Kunci di layar hitam.
+            cutsceneLayer.src = "egglayer4.gif"; await delay(6000);
+            cutsceneLayer.src = "egglayer5.png"; await waitForSkipOrTimeout(5000);
+            cutsceneLayer.src = "egglayer6.png"; await delay(3000);
             cutsceneLayer.src = "egglayer7close.png";
-            // Kita biarkan inCutscene bernilai 'true' selamanya, 
-            // sehingga player tidak bisa melakukan apa-apa selain me-refresh browser.
         }
 
-        // --- SISTEM AKSI & INTERAKSI ---
+        // --- SISTEM AKSI INTERAKSI ---
         function handleAction() {
-            // 1. Jika sedang dalam Cutscene, jadikan tombol aksi sebagai tombol "Skip" (Berikutnya)
-            if (inCutscene) {
-                if (skipResolver) skipResolver(); // Loncati timer!
-                return;
-            }
-
+            if (isSettingsOpen) return;
+            if (inCutscene) { if (skipResolver) skipResolver(); return; }
             if (isMoving) return; 
 
             const tilePos = `${currentCol},${currentRow}`;
 
-            // --- INTERAKSI ITEM RAHASIA (DI TILE NATORI: 9,8) ---
+            // Ambil Kunci Natori
             if (tilePos === "9,8" && !hasEggKey) {
                 hasEggKey = true;
-                // Sembunyikan gambar kunci
                 document.getElementById('egg-key').style.display = 'none';
-                console.log("Kamu merasakan sesuatu yang dingin di saku Natori..."); // Hanya muncul di Inspect Element
+                addLog('mind', '*Kunci apa ini? Terasa sangat dingin... Natori sepertinya tidak menyadarinya.*');
                 return;
             }
 
-            // --- INTERAKSI PINTU RAHASIA (DI TILE b1: 1,0) ---
-            if (tilePos === "1,0" && hasEggKey) {
-                playEasterEgg();
+            // Pintu Easter Egg (b1)
+            if (tilePos === "1,0") {
+                if (hasEggKey) playEasterEgg();
+                else { addLog('status', 'pintu terkunci'); addLog('warning', 'anda tidak diizinkan untuk memasukinya'); }
                 return;
             }
 
-            // (Kode interaksi lain seperti Teleportasi tetap berjalan normal)
+            // Pintu p7
+            if (tilePos === "15,6") {
+                addLog('status', 'pintu terkunci'); addLog('warning', 'anda tidak diizinkan untuk memasukinya');
+                return;
+            }
+
+            // Pintu Exit Darurat (j2)
             if (tilePos === "9,1") {
+                addLog('status', 'meninggalkan ruang laboratorium kimia');
                 currentCol = 11; currentRow = 1;
                 playerElement.style.transition = 'none';
                 playerElement.style.left = (currentCol * TILE_SIZE) + "px";
@@ -294,9 +409,10 @@
             }
         }
 
-        // --- EVENT LISTENER (KENDALI) ---
+        // --- KONTROL EVENT LISTENER ---
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
+            if (key === 'escape') toggleSettings();
             if (key === 'w' || key === 'arrowup') activeKeys.up = true;
             if (key === 's' || key === 'arrowdown') activeKeys.down = true;
             if (key === 'a' || key === 'arrowleft') activeKeys.left = true;
@@ -312,43 +428,30 @@
             if (key === 'd' || key === 'arrowright') activeKeys.right = false;
         });
 
-        // Kontrol Mobile
         const addTouchControl = (id, key) => {
             const btn = document.getElementById(id);
             btn.addEventListener('pointerdown', () => activeKeys[key] = true);
             btn.addEventListener('pointerup', () => activeKeys[key] = false);
             btn.addEventListener('pointerleave', () => activeKeys[key] = false); 
         };
-        addTouchControl('btn-up', 'up');
-        addTouchControl('btn-down', 'down');
-        addTouchControl('btn-left', 'left');
-        addTouchControl('btn-right', 'right');
+        addTouchControl('btn-up', 'up'); addTouchControl('btn-down', 'down');
+        addTouchControl('btn-left', 'left'); addTouchControl('btn-right', 'right');
 
-        // Tombol Aksi Layar Sentuh
-        const btnAction = document.getElementById('btn-action');
-        btnAction.addEventListener('pointerdown', (e) => {
-            e.preventDefault(); 
-            handleAction();
-        });
-
-        // Fitur klik langsung di layar (kanvas) untuk skip cutscene di PC/Mobile
-        cutsceneLayer.addEventListener('pointerdown', () => {
-            if (inCutscene && skipResolver) skipResolver();
-        });
+        document.getElementById('btn-action').addEventListener('pointerdown', (e) => { e.preventDefault(); handleAction(); });
+        cutsceneLayer.addEventListener('pointerdown', () => { if (inCutscene && skipResolver) skipResolver(); });
 
         document.getElementById('dpad-container').addEventListener('contextmenu', e => e.preventDefault());
-        btnAction.addEventListener('contextmenu', e => e.preventDefault());
+        document.getElementById('btn-action').addEventListener('contextmenu', e => e.preventDefault());
 
         // --- GAME LOOP ---
         function gameLoop() {
-            // Mencegah pergerakan jika dalam cutscene atau sedang bergerak antar tile
-            if (!isMoving && !inCutscene) {
+            if (!isMoving && !inCutscene && !isSettingsOpen) {
+                checkEvents(); // Mengecek trigger event berdasarkan koordinat
                 let dCol = 0; let dRow = 0;
                 if (activeKeys.up) dRow = -1;
                 else if (activeKeys.down) dRow = 1;
                 else if (activeKeys.left) dCol = -1;
                 else if (activeKeys.right) dCol = 1;
-
                 if (dCol !== 0 || dRow !== 0) movePlayer(dCol, dRow);
             }
             requestAnimationFrame(gameLoop);
