@@ -24,26 +24,22 @@
         #player { position: absolute; width: 32px; height: 32px; transition: left 0.25s linear, top 0.25s linear; z-index: 10; }
         .face-left { transform: scaleX(-1); }
 
-        /* Class untuk menyembunyikan HUD secara massal */
         .hide-hud { display: none !important; }
 
-        /* --- UI LAYER (Presisi 512x288) --- */
         .fullscreen-ui {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* Mencegah bentrok klik dengan kanvas game */
-            z-index: 20; background-size: cover;
+            pointer-events: none; z-index: 20; background-size: cover;
         }
 
         #statlog-img { background-image: url('statlog.png'); opacity: 0.5; }
         #statprofile-img { background-image: url('statprofile.png'); }
         #keysetting-img { background-image: url('keysetting.png'); }
 
-        /* Zona Kontrol yang bisa diklik (pointer-events: auto;) */
         #statlog-content {
             position: absolute; top: 18px; left: 6px; width: 182px; height: 40px;
             overflow-y: auto; font-family: 'VT323', monospace; font-size: 14px; 
             line-height: 1.1; text-shadow: 1px 1px 0 #000;
-            z-index: 21; pointer-events: auto; /* Agar bisa discroll */
+            z-index: 21; pointer-events: auto; 
         }
         #statlog-content::-webkit-scrollbar { display: none; }
 
@@ -73,12 +69,12 @@
         .log-natori { color: #00ffff; }
         .log-warning { color: #ffff00; }
         .log-mind { color: #ff0090; font-style: italic; opacity: 0.9; }
+        .log-iteminfo { color: #00ff00; } /* Warna Hijau Lime Baru! */
 
-        /* --- MENU MODAL & EFEK GELAP --- */
         #dim-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.7); z-index: 50; display: none;
-            pointer-events: auto; /* Memblokir klik ke game saat menu terbuka */
+            pointer-events: auto;
         }
         #settings-modal {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -91,11 +87,50 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 100; display: none; background-color: black; image-rendering: pixelated;
         }
+
+        /* --- TITLE SCREEN STYLES --- */
+        #titlescreen-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 150; pointer-events: auto; background-color: #cce6f4; /* Warna dasar jaga-jaga */
+        }
+        .title-img {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; image-rendering: pixelated; pointer-events: none;
+        }
+        #title-bg { background-image: url('titlescreen.png'); }
+        #title-keys { background-image: url('titlekey.png'); }
+
+        /* Hitbox Tombol Title Screen (Tebakan koordinat presisi tengah) */
+        .title-hitbox {
+            position: absolute; left: 186px; width: 140px; height: 32px;
+            cursor: pointer; z-index: 155;
+            /* Border merah untuk mempermudah tes posisi, hapus/komen baris bawah nanti! */
+            /* border: 1px solid red; */ 
+        }
+        #hitbox-mulai { top: 128px; }
+        #hitbox-kredit { top: 162px; }
+
+        /* Animasi Memudar (Fade-out) */
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden; }
+        }
+        .fade-out {
+            animation: fadeOut 1s forwards;
+            pointer-events: none !important;
+        }
     </style>
 </head>
 <body>
 
     <div id="game-container">
+        <div id="titlescreen-layer">
+            <div id="title-bg" class="title-img"></div>
+            <div id="title-keys" class="title-img"></div>
+            <div id="hitbox-mulai" class="title-hitbox" onclick="startGame()"></div>
+            <div id="hitbox-kredit" class="title-hitbox" onclick="showCredit()"></div>
+        </div>
+
         <img src="circleexit.gif" class="marker hud-element" style="left: 288px; top: 32px; z-index: 2;" alt="Exit">
         <img src="circleinfo.gif" class="marker hud-element" style="left: 256px; top: 224px; z-index: 2;" alt="Info"> 
         <img src="circleinfo.gif" class="marker hud-element" style="left: 416px; top: 224px; z-index: 2;" alt="Info"> 
@@ -143,6 +178,7 @@
         const settingsModal = document.getElementById('settings-modal');
         const dimOverlay = document.getElementById('dim-overlay');
         const hudElements = document.querySelectorAll('.hud-element');
+        const titleScreenLayer = document.getElementById('titlescreen-layer');
         
         const TILE_SIZE = 32;
         
@@ -158,11 +194,33 @@
             [  0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1 ] 
         ];
 
-        let currentCol = 13; let currentRow = 1; // n2
+        let currentCol = 13; let currentRow = 1; 
         let isMoving = false; let isFacingRight = true;
         let inCutscene = false; let isSettingsOpen = false;
         let isHudHidden = false; let hasEggKey = false;
+        
+        // Status Layar Judul
+        let inTitleScreen = true; 
+
         const activeKeys = { up: false, down: false, left: false, right: false };
+
+        // --- SISTEM TITLE SCREEN ---
+        function startGame() {
+            if (!inTitleScreen) return;
+            inTitleScreen = false;
+            // Tambahkan class memudar ke layer title screen
+            titleScreenLayer.classList.add('fade-out');
+            
+            // Hapus element dari sistem setelah 1 detik (agar tidak mengganggu klik di game)
+            setTimeout(() => {
+                titleScreenLayer.style.display = 'none';
+            }, 1000);
+        }
+
+        function showCredit() {
+            // Tempat disiapkannya layer-by-layer kredit nanti
+            console.log("Tombol Kredit ditekan! Fitur akan datang.");
+        }
 
         // --- SISTEM STATUS LOG ---
         const logQueue = [];
@@ -181,6 +239,7 @@
             else if (type === 'natori') prefix = "Natori: ";
             else if (type === 'status') prefix = "status... ";
             else if (type === 'warning') prefix = "info: ";
+            else if (type === 'iteminfo') prefix = "Informasi item: ";
 
             logContent.appendChild(logLine);
             const fullText = prefix + text;
@@ -239,7 +298,7 @@
 
         // --- SISTEM UI SETTING ---
         function toggleSettings() {
-            if (inCutscene) return;
+            if (inCutscene || inTitleScreen) return;
             isSettingsOpen = !isSettingsOpen;
             settingsModal.style.display = isSettingsOpen ? 'block' : 'none';
             dimOverlay.style.display = isSettingsOpen ? 'block' : 'none';
@@ -252,7 +311,7 @@
                 else el.classList.remove('hide-hud');
             });
             settingsModal.style.backgroundImage = isHudHidden ? "url('setting0.png')" : "url('setting1.png')";
-            toggleSettings(); // Otomatis menutup menu setting setelah diklik
+            toggleSettings(); 
         }
 
         function exitGame() { console.log("Keluar dari permainan..."); }
@@ -297,11 +356,18 @@
         }
 
         function handleAction() {
-            if (isSettingsOpen) return;
+            if (isSettingsOpen || inTitleScreen) return;
             if (inCutscene) { if (skipResolver) skipResolver(); return; }
             if (isMoving) return; 
             const tilePos = `${currentCol},${currentRow}`;
 
+            // --- INFO ITEM (Hijau Lime) ---
+            if (tilePos === "8,0") { addLog('iteminfo', 'APAR / Alat Pemadam Api Ringan. Benda ini untuk memadamkan kebakaran kecil secara cepat.'); return; }
+            if (tilePos === "0,8") { addLog('iteminfo', 'Pancuran Darurat dan Air Mancur Pencuci Mata. Fasilitas ini dirancang untuk dekontaminasi segera ketika seseorang terpapar bahan berbahaya.'); return; }
+            if (tilePos === "0,1") { addLog('iteminfo', 'Tempat Sampah. Benda ini digunakan untuk tempat pembuangan limbah padat.'); return; }
+            if (tilePos === "9,0") { addLog('iteminfo', 'Kotak P3K. Berisi alat medis dan obat-obatan untuk penanganan kecelakaan kerja.'); return; }
+
+            // --- AKSI LAINNYA ---
             if (tilePos === "9,8" && !hasEggKey) {
                 hasEggKey = true; document.getElementById('egg-key').style.display = 'none';
                 addLog('mind', '*Kunci apa ini? Terasa sangat dingin... Natori sepertinya tidak menyadarinya.*');
@@ -357,7 +423,7 @@
         document.getElementById('btn-action').addEventListener('contextmenu', e => e.preventDefault());
 
         function gameLoop() {
-            if (!isMoving && !inCutscene && !isSettingsOpen) {
+            if (!isMoving && !inCutscene && !isSettingsOpen && !inTitleScreen) {
                 checkEvents();
                 let dCol = 0; let dRow = 0;
                 if (activeKeys.up) dRow = -1; else if (activeKeys.down) dRow = 1;
