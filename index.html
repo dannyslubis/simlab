@@ -63,7 +63,6 @@
             opacity: 0.5; cursor: pointer; z-index: 20; pointer-events: auto;
         }
 
-        /* Warna Teks Log */
         .log-status { color: #ffffff; }
         .log-kurori { color: #ff0090; }
         .log-natori { color: #00ffff; }
@@ -77,19 +76,15 @@
             pointer-events: auto;
         }
 
-        /* --- MENU MODAL SETTING (Skala Penuh) --- */
         #settings-modal {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 60; display: none; background-image: url('setting1.png'); 
             background-size: cover; image-rendering: pixelated; pointer-events: none;
         }
         
-        /* Hitbox Tombol Setting di Tengah Layar */
         .setting-hitbox {
             position: absolute; left: 186px; width: 140px; height: 26px;
             cursor: pointer; z-index: 65; pointer-events: auto;
-            /* Hapus tanda komentar di bawah jika ingin melihat letak kotak untuk disesuaikan */
-            /* border: 1px solid blue; */
         }
         #hitbox-kembali { top: 96px; }
         #hitbox-hud { top: 130px; }
@@ -100,7 +95,7 @@
             z-index: 100; display: none; background-color: black; image-rendering: pixelated;
         }
 
-        /* --- TITLE SCREEN STYLES --- */
+        /* --- TITLE SCREEN & CREDITS STYLES --- */
         #titlescreen-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 150; pointer-events: auto; background-color: #cce6f4; 
@@ -119,7 +114,17 @@
         #hitbox-mulai { top: 128px; }
         #hitbox-kredit { top: 162px; }
 
-        /* Animasi Memudar 3 Detik */
+        /* Layer Khusus Credits */
+        #credits-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 160; display: none; background-color: #1a1a1a; 
+        }
+        #hitbox-close-credit {
+            position: absolute; top: 0; right: 0; width: 40px; height: 35px;
+            cursor: pointer; z-index: 165;
+        }
+
+        /* Animasi Transisi */
         @keyframes fadeOut {
             from { opacity: 1; }
             to { opacity: 0; visibility: hidden; }
@@ -128,6 +133,9 @@
             animation: fadeOut 3s forwards;
             pointer-events: none !important;
         }
+
+        @keyframes fadeInFast { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOutFast { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
     </style>
 </head>
 <body>
@@ -138,6 +146,12 @@
             <div id="title-keys" class="title-img"></div>
             <div id="hitbox-mulai" class="title-hitbox" onclick="startGame()"></div>
             <div id="hitbox-kredit" class="title-hitbox" onclick="showCredit()"></div>
+        </div>
+
+        <div id="credits-layer">
+            <div class="title-img" style="background-image: url('credits.png');"></div>
+            <div class="title-img" style="background-image: url('keyexit.png');"></div>
+            <div id="hitbox-close-credit" onclick="closeCredit()"></div>
         </div>
 
         <img src="circleexit.gif" class="marker hud-element" style="left: 288px; top: 32px; z-index: 2;" alt="Exit">
@@ -189,6 +203,7 @@
         const dimOverlay = document.getElementById('dim-overlay');
         const hudElements = document.querySelectorAll('.hud-element');
         const titleScreenLayer = document.getElementById('titlescreen-layer');
+        const creditsLayer = document.getElementById('credits-layer');
         
         const TILE_SIZE = 32;
         
@@ -212,19 +227,31 @@
 
         const activeKeys = { up: false, down: false, left: false, right: false };
 
+        // --- SISTEM TITLE SCREEN & CREDITS ---
         function startGame() {
             if (!inTitleScreen) return;
             inTitleScreen = false;
             titleScreenLayer.classList.add('fade-out');
             setTimeout(() => {
                 titleScreenLayer.style.display = 'none';
-            }, 3000); // Waktu diubah menjadi 3000 ms (3 detik)
+            }, 3000); 
         }
 
         function showCredit() {
-            console.log("Tombol Kredit ditekan! Fitur akan datang.");
+            if (!inTitleScreen) return;
+            creditsLayer.style.display = 'block';
+            creditsLayer.style.animation = 'fadeInFast 0.3s forwards';
         }
 
+        function closeCredit() {
+            creditsLayer.style.animation = 'fadeOutFast 0.3s forwards';
+            setTimeout(() => {
+                creditsLayer.style.display = 'none';
+                creditsLayer.style.animation = ''; // Reset animasi
+            }, 300);
+        }
+
+        // --- SISTEM STATUS LOG ---
         const logQueue = [];
         let isTyping = false;
 
@@ -315,11 +342,10 @@
         }
 
         function exitGame() { 
-            // Fungsi untuk mengembalikan pemain ke Title Screen
-            toggleSettings(); // Tutup modal setting dulu
+            toggleSettings(); 
             inTitleScreen = true;
             titleScreenLayer.style.display = 'block';
-            titleScreenLayer.classList.remove('fade-out'); // Hilangkan animasi memudar agar solid kembali
+            titleScreenLayer.classList.remove('fade-out'); 
         }
 
         function movePlayer(dCol, dRow) {
