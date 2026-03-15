@@ -70,6 +70,7 @@
         .log-warning { color: #ffff00; }
         .log-mind { color: #ff0090; font-style: italic; opacity: 0.9; }
         .log-iteminfo { color: #00ff00; }
+        .log-star { color: #ffd700; text-shadow: 1px 1px 0 #000; } /* Warna Bintang */
 
         #dim-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -129,10 +130,17 @@
         @keyframes fadeInFast { from { opacity: 0; } to { opacity: 1; } }
         @keyframes fadeOutFast { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
 
+        /* --- OVERLAY TRANSISI GLOBAL --- */
+        #transition-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: black; opacity: 0; pointer-events: none; z-index: 999;
+            transition: opacity 3s ease;
+        }
+
         /* ================= STYLE MINIGAME PROUST ================= */
         #minigame-proust {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #000; z-index: 200; display: none; /* Disembunyikan awalnya */
+            background-color: #000; z-index: 200; display: none; 
             image-rendering: pixelated; font-family: 'VT323', monospace;
         }
 
@@ -217,6 +225,8 @@
 <body>
 
     <div id="game-container">
+        <div id="transition-overlay"></div>
+
         <div id="titlescreen-layer">
             <div id="title-bg" class="title-img"></div>
             <div id="title-keys" class="title-img"></div>
@@ -230,7 +240,6 @@
         </div>
 
         <img src="circleexit.gif" class="marker hud-element" style="left: 288px; top: 32px; z-index: 2;" alt="Exit">
-        
         <img src="circleinfo.gif" class="marker hud-element" style="left: 256px; top: 224px; z-index: 2;" alt="Info i8"> 
         <img src="circleinfo.gif" class="marker hud-element" style="left: 416px; top: 224px; z-index: 2;" alt="Info n8"> 
 
@@ -373,7 +382,11 @@
         const creditsLayer = document.getElementById('credits-layer');
         
         const TILE_SIZE = 32;
-        let inMinigame = false; // FLAG ISOLASI MINIGAME
+        let inMinigame = false; 
+        
+        // VARIABEL PROGRESI BINTANG
+        let playerStars = 0;
+        let questProustDone = false; // Mencegah farming bintang di quest d6
         
         const collisionMap = [
             [  1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1 ],
@@ -432,6 +445,7 @@
             else if (type === 'status') prefix = "status... ";
             else if (type === 'warning') prefix = "info: ";
             else if (type === 'iteminfo') prefix = "Informasi item: ";
+            else if (type === 'star') prefix = "status... "; // Prefix untuk bintang
 
             logContent.appendChild(logLine);
             const fullText = prefix + text;
@@ -464,6 +478,17 @@
             }
             if (!triggeredEvents.doorLab && pos === '10,6') {
                 triggeredEvents.doorLab = true; addLog('status', 'melewati pintu laboratorium kimia dasar');
+            }
+            // PEMULIHAN FITUR: Dialog Intro Natori
+            if (!triggeredEvents.natoriIntro && pos === '9,6') {
+                triggeredEvents.natoriIntro = true;
+                addLog('kurori', 'permisi... apakah benar ini ruang laboratorium kimia?');
+                addLog('natori', 'iya benar ini ruangannya');
+                addLog('natori', 'selamat datang diruang laboratorium kimia');
+                addLog('natori', 'perkenalkan nama saya natori, saya adalah laboran disini');
+                addLog('natori', 'jika kamu perlu bantuanku, aku ada disini untuk membantu!');
+                addLog('natori', 'senang bertemu denganmu!');
+                addLog('kurori', 'senang bertemu denganmu juga!');
             }
         }
 
@@ -502,6 +527,29 @@
             }
         }
 
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        let skipResolver = null;
+        const waitForSkipOrTimeout = (ms) => new Promise(resolve => {
+            let timeout = setTimeout(() => { skipResolver = null; resolve(); }, ms);
+            skipResolver = () => { clearTimeout(timeout); skipResolver = null; resolve(); };
+        });
+
+        async function playEasterEgg() {
+            inCutscene = true;
+            hudElements.forEach(el => el.classList.add('hide-hud'));
+            document.getElementById('keysetting-img').style.display = 'none';
+            document.getElementById('btn-setting-hitbox').style.display = 'none';
+            activeKeys.up = activeKeys.down = activeKeys.left = activeKeys.right = false;
+
+            await delay(1000); cutsceneLayer.src = "egglayer1open.png"; cutsceneLayer.style.display = "block";
+            await delay(1000); cutsceneLayer.src = "egglayer2.png";
+            await delay(2000); cutsceneLayer.src = "egglayer3.png"; await waitForSkipOrTimeout(5000);
+            cutsceneLayer.src = "egglayer4.gif"; await delay(6000);
+            cutsceneLayer.src = "egglayer5.png"; await waitForSkipOrTimeout(5000);
+            cutsceneLayer.src = "egglayer6.png"; await delay(3000);
+            cutsceneLayer.src = "egglayer7close.png";
+        }
+
         function handleAction() {
             if (isSettingsOpen || inTitleScreen || inMinigame) return;
             if (inCutscene) { if (skipResolver) skipResolver(); return; }
@@ -510,6 +558,18 @@
 
             // PEMICU MINIGAME PROUST
             if (tilePos === "3,5") { startMinigameProust(); return; }
+
+            // PEMULIHAN FITUR: Easter Egg Key & Door
+            if (tilePos === "9,8" && !hasEggKey) {
+                hasEggKey = true; document.getElementById('egg-key').style.display = 'none';
+                addLog('mind', '*Kunci apa ini? Terasa sangat dingin... Natori sepertinya tidak menyadarinya.*');
+                return;
+            }
+            if (tilePos === "1,0") {
+                if (hasEggKey) playEasterEgg();
+                else { addLog('status', 'pintu terkunci'); addLog('warning', 'anda tidak diizinkan untuk memasukinya'); }
+                return;
+            }
 
             if (tilePos === "8,0") { addLog('iteminfo', 'APAR. Untuk memadamkan kebakaran kecil.'); return; }
             if (tilePos === "0,8") { addLog('iteminfo', 'Pancuran Darurat. Untuk dekontaminasi bahan berbahaya.'); return; }
@@ -541,17 +601,29 @@
 
         function startMinigameProust() {
             inMinigame = true;
-            document.getElementById('minigame-proust').style.display = 'block';
-            mg_currentPhase = 1; mg_panel1 = 0;
             
-            document.getElementById('mg-phase1-container').style.display = 'block';
-            document.getElementById('mg-phase2-container').style.display = 'none';
-            document.getElementById('mg-phase3-container').style.display = 'none';
-            document.getElementById('mg-popup-exit-container').style.display = 'none';
-            document.getElementById('mg-dark-overlay').style.display = 'none';
-            
-            mg_renderDialogPhase1();
-            addLog('status', 'memasuki simulasi Hukum Proust');
+            // Transisi Masuk: 3 Detik Hitam
+            const transOverlay = document.getElementById('transition-overlay');
+            transOverlay.style.transition = 'opacity 3s ease';
+            transOverlay.style.opacity = '1';
+
+            setTimeout(() => {
+                document.getElementById('minigame-proust').style.display = 'block';
+                mg_currentPhase = 1; mg_panel1 = 0;
+                
+                document.getElementById('mg-phase1-container').style.display = 'block';
+                document.getElementById('mg-phase2-container').style.display = 'none';
+                document.getElementById('mg-phase3-container').style.display = 'none';
+                document.getElementById('mg-popup-exit-container').style.display = 'none';
+                document.getElementById('mg-dark-overlay').style.display = 'none';
+                
+                mg_renderDialogPhase1();
+                
+                // Layar kembali terang instan untuk mulai minigame
+                transOverlay.style.transition = 'opacity 0.5s ease'; 
+                transOverlay.style.opacity = '0';
+                addLog('status', 'memasuki simulasi Hukum Proust');
+            }, 3000);
         }
 
         function mg_renderDialogPhase1() {
@@ -764,11 +836,31 @@
         }
 
         function mg_selesaikanLobby() { 
-            document.getElementById('minigame-proust').style.display = 'none';
-            inMinigame = false;
-            mg_currentPhase = 1; mg_h = 1; mg_o = 1;
-            clearInterval(mg_typeInterval); clearTimeout(mg_autoNextTimeout);
-            addLog('status', 'menyelesaikan simulasi');
+            // Transisi Keluar: 1 Detik Hitam
+            const transOverlay = document.getElementById('transition-overlay');
+            transOverlay.style.transition = 'opacity 1s ease';
+            transOverlay.style.opacity = '1';
+
+            setTimeout(() => {
+                document.getElementById('minigame-proust').style.display = 'none';
+                inMinigame = false;
+                mg_currentPhase = 1; mg_h = 1; mg_o = 1;
+                clearInterval(mg_typeInterval); clearTimeout(mg_autoNextTimeout);
+                
+                transOverlay.style.opacity = '0'; // Layar kembali normal
+                
+                // SISTEM PENAMBAHAN BINTANG
+                if (mg_skor === 4 && !questProustDone) {
+                    questProustDone = true;
+                    playerStars++;
+                    if (playerStars > 7) playerStars = 7;
+                    
+                    document.getElementById('statprofile-img').style.backgroundImage = `url('statprofile${playerStars}.png')`;
+                    addLog('star', 'quest finished! Kurori mendapatkan 1 Bintang.');
+                } else {
+                    addLog('status', 'menyelesaikan simulasi');
+                }
+            }, 1000);
         }
 
         function mg_openInfo() { document.getElementById('mg-info-container').classList.add('show'); }
@@ -780,16 +872,14 @@
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
             
-            // Isolasi input jika minigame aktif
             if (inMinigame) {
                 if (key === ' ' || key === 'enter') {
                     if (mg_currentPhase === 1) mg_handleNextPhase1();
                     else if (mg_currentPhase === 3 && (mg_phase3State === "intro" || mg_phase3State === "outro")) mg_handleDialogPhase3();
                 }
-                return; // Stop eksekusi agar Kurori tidak jalan di latar belakang
+                return;
             }
 
-            // Input game utama
             if (key === 'escape') toggleSettings();
             if (key === 'w' || key === 'arrowup') activeKeys.up = true;
             if (key === 's' || key === 'arrowdown') activeKeys.down = true;
