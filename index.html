@@ -6,6 +6,7 @@
     <title>Game Lab Kimia - Stoikiometri</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
+        /* ================= STYLE MAIN GAME ================= */
         body {
             display: flex; justify-content: center; align-items: center;
             height: 100vh; background-color: #1a1a1a; margin: 0;
@@ -95,7 +96,7 @@
             z-index: 100; display: none; background-color: black; image-rendering: pixelated;
         }
 
-        /* --- TITLE SCREEN & CREDITS STYLES --- */
+        /* --- TITLE SCREEN & CREDITS --- */
         #titlescreen-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 150; pointer-events: auto; background-color: #cce6f4; 
@@ -114,7 +115,6 @@
         #hitbox-mulai { top: 128px; }
         #hitbox-kredit { top: 162px; }
 
-        /* Layer Khusus Credits */
         #credits-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 160; display: none; background-color: #1a1a1a; 
@@ -124,18 +124,94 @@
             cursor: pointer; z-index: 165;
         }
 
-        /* Animasi Transisi */
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; visibility: hidden; }
-        }
-        .fade-out {
-            animation: fadeOut 3s forwards;
-            pointer-events: none !important;
-        }
-
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
+        .fade-out { animation: fadeOut 3s forwards; pointer-events: none !important; }
         @keyframes fadeInFast { from { opacity: 0; } to { opacity: 1; } }
         @keyframes fadeOutFast { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
+
+        /* ================= STYLE MINIGAME PROUST ================= */
+        #minigame-proust {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000; z-index: 200; display: none; /* Disembunyikan awalnya */
+            image-rendering: pixelated; font-family: 'VT323', monospace;
+        }
+
+        .mg-layer {
+            position: absolute; top: 0; left: 0; width: 512px; height: 288px;
+            pointer-events: none; z-index: 1;
+        }
+        .mg-hitbox {
+            position: absolute; cursor: pointer; z-index: 30; 
+        }
+        #mg-fade-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: black; opacity: 0; z-index: 100;
+            pointer-events: none; transition: opacity 1s ease; 
+        }
+
+        /* Sprite & Dialog */
+        .mg-sprite {
+            position: absolute; top: 0; left: 0; width: 512px; height: 288px;
+            transition: opacity 0.3s ease, filter 0.3s ease, transform 0.8s ease-in-out;
+            pointer-events: none; z-index: 5;
+        }
+        .mg-sprite.active { opacity: 1; filter: brightness(1); z-index: 6; }
+        .mg-sprite.inactive { opacity: 0.5; filter: brightness(0.4); z-index: 5; }
+        .mg-sprite.hidden { opacity: 0; }
+
+        .mg-dialog-area {
+            position: absolute; left: 32px; top: 192px; width: 400px; height: 64px; 
+            color: #fff; font-size: 18px; line-height: 1.2; pointer-events: none; z-index: 15;
+            display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;
+        }
+        .mg-dialog-name { color: #ffcc00; margin-bottom: 2px; font-size: 20px; }
+        .mg-dialog-text { word-wrap: break-word; white-space: pre-wrap; }
+
+        /* Containers Fase */
+        #mg-phase1-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }
+        #mg-phase2-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
+        #mg-phase3-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
+
+        /* Teks Box Simulasi */
+        .mg-text-box {
+            position: absolute; display: flex; justify-content: center; align-items: center;
+            font-size: 18px; line-height: 1; color: #000; height: 32px; pointer-events: none; white-space: nowrap; z-index: 15;
+        }
+        .mg-coef { margin-right: 4px; }
+        .mg-text-box sub { font-size: 12px; position: relative; top: 4px; margin-left: 1px; }
+
+        #mg-text-h { left: 64px; top: 192px; width: 96px; }
+        #mg-text-o { left: 192px; top: 192px; width: 96px; }
+        #mg-text-h2o { left: 320px; top: 192px; width: 128px; }
+
+        /* Quiz UI */
+        #mg-ui-exam-dialog { transition: opacity 0.5s ease; }
+        #mg-quiz-ui-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; z-index: 20; opacity: 0; transition: opacity 0.5s ease;
+        }
+        .mg-quiz-text {
+            position: absolute; color: #000; font-size: 16px; line-height: 1.2; 
+            pointer-events: none; display: flex; align-items: center; box-sizing: border-box;
+        }
+        #mg-quiz-question { align-items: flex-start; padding: 8px; }
+        .mg-quiz-ans { padding-left: 8px; }
+        #mg-result-ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; z-index: 25; }
+
+        /* Popup Exit Khusus Minigame */
+        #mg-info-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 50; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; 
+        }
+        #mg-info-container.show { opacity: 1; pointer-events: auto; }
+        #mg-dark-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); display: none; z-index: 60;
+        }
+        #mg-popup-exit-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; z-index: 61;
+        }
     </style>
 </head>
 <body>
@@ -147,7 +223,6 @@
             <div id="hitbox-mulai" class="title-hitbox" onclick="startGame()"></div>
             <div id="hitbox-kredit" class="title-hitbox" onclick="showCredit()"></div>
         </div>
-
         <div id="credits-layer">
             <div class="title-img" style="background-image: url('credits.png');"></div>
             <div class="title-img" style="background-image: url('keyexit.png');"></div>
@@ -155,15 +230,17 @@
         </div>
 
         <img src="circleexit.gif" class="marker hud-element" style="left: 288px; top: 32px; z-index: 2;" alt="Exit">
-        <img src="circleinfo.gif" class="marker hud-element" style="left: 256px; top: 224px; z-index: 2;" alt="Info"> 
-        <img src="circleinfo.gif" class="marker hud-element" style="left: 416px; top: 224px; z-index: 2;" alt="Info"> 
-        <img src="circlequest.gif" class="marker hud-element" style="left: 0px; top: 64px; z-index: 2;" alt="Quest">   
-        <img src="circlequest.gif" class="marker hud-element" style="left: 0px; top: 160px; z-index: 2;" alt="Quest">  
-        <img src="circlequest.gif" class="marker hud-element" style="left: 96px; top: 160px; z-index: 2;" alt="Quest"> 
-        <img src="circlequest.gif" class="marker hud-element" style="left: 96px; top: 256px; z-index: 2;" alt="Quest"> 
-        <img src="circlequest.gif" class="marker hud-element" style="left: 160px; top: 32px; z-index: 2;" alt="Quest"> 
-        <img src="circlequest.gif" class="marker hud-element" style="left: 160px; top: 160px; z-index: 2;" alt="Quest">
-        <img src="circlequest.gif" class="marker hud-element" style="left: 192px; top: 256px; z-index: 2;" alt="Quest">
+        
+        <img src="circleinfo.gif" class="marker hud-element" style="left: 256px; top: 224px; z-index: 2;" alt="Info i8"> 
+        <img src="circleinfo.gif" class="marker hud-element" style="left: 416px; top: 224px; z-index: 2;" alt="Info n8"> 
+
+        <img src="circlequest.gif" class="marker hud-element" style="left: 0px; top: 64px; z-index: 2;" alt="Quest a3">   
+        <img src="circlequest.gif" class="marker hud-element" style="left: 96px; top: 32px; z-index: 2;" alt="Quest d2">  
+        <img src="circlequest.gif" class="marker hud-element" style="left: 96px; top: 160px; z-index: 2;" alt="Quest d6"> 
+        <img src="circlequest.gif" class="marker hud-element" style="left: 96px; top: 256px; z-index: 2;" alt="Quest d9"> 
+        <img src="circlequest.gif" class="marker hud-element" style="left: 192px; top: 32px; z-index: 2;" alt="Quest g2"> 
+        <img src="circlequest.gif" class="marker hud-element" style="left: 192px; top: 160px; z-index: 2;" alt="Quest g6">
+        <img src="circlequest.gif" class="marker hud-element" style="left: 192px; top: 256px; z-index: 2;" alt="Quest g9">
 
         <img src="eggkey.png" id="egg-key" class="marker" style="left: 288px; top: 256px;" alt="Rahasia">
         <img src="standn.gif" id="natori" class="marker" style="left: 288px; top: 256px;" alt="Natori">
@@ -183,9 +260,7 @@
 
         <div id="keysetting-img" class="fullscreen-ui"></div>
         <div id="btn-setting-hitbox" onclick="toggleSettings()"></div>
-
         <div id="dim-overlay" onclick="toggleSettings()"></div>
-        
         <div id="settings-modal">
             <div id="hitbox-kembali" class="setting-hitbox" onclick="toggleSettings()"></div>
             <div id="hitbox-hud" class="setting-hitbox" onclick="toggleHud()"></div>
@@ -193,9 +268,101 @@
         </div>
 
         <img id="cutscene-layer" src="" alt="Cutscene">
+
+        <div id="minigame-proust">
+            <div id="mg-fade-overlay"></div>
+            
+            <div id="mg-phase1-container">
+                <img class="mg-layer" src="kanvaspbbg.png" alt="Lab Background" style="z-index: 1;">
+                <img id="mg-sprite-kurori" class="mg-sprite hidden" src="kurori_excited.png" alt="Kurori">
+                <img id="mg-sprite-natori" class="mg-sprite hidden" src="natori_neutral.png" alt="Natori">
+                <img class="mg-layer" src="txtbox.png" alt="Textbox" style="opacity: 0.75; z-index: 10;">
+                <img class="mg-layer" src="keynextskip.png" alt="Next Skip" style="z-index: 11;">
+                <div id="mg-dialog-area-1" class="mg-dialog-area">
+                    <div id="mg-dialog-name-1" class="mg-dialog-name"></div>
+                    <div id="mg-dialog-text-1" class="mg-dialog-text"></div>
+                </div>
+                <div class="mg-hitbox" style="left: 448px; top: 192px; width: 32px; height: 32px; z-index: 12;" onclick="mg_handleNextPhase1()"></div>
+                <div class="mg-hitbox" style="left: 448px; top: 224px; width: 32px; height: 32px; z-index: 12;" onclick="mg_handleSkipPhase1()"></div>
+            </div>
+
+            <div id="mg-phase2-container">
+                <img class="mg-layer" src="kanvaspb.png" alt="Canvas Dasar">
+                <img id="mg-anim-layer" class="mg-layer" src="pbh1o1.gif" alt="Animasi Reaksi" style="z-index: 2;">
+                <img class="mg-layer" src="keypbplusminus.png" alt="UI Bawah" style="z-index: 10;">
+
+                <div id="mg-phase2-interactables">
+                    <div id="mg-text-h" class="mg-text-box">H<sub>2(g)</sub></div>
+                    <div id="mg-text-o" class="mg-text-box">O<sub>2(g)</sub></div>
+                    <div id="mg-text-h2o" class="mg-text-box">H<sub>2</sub>O<sub>(l)</sub></div>
+
+                    <div class="mg-hitbox" style="left: 64px; top: 224px; width: 32px; height: 32px;" onclick="mg_updateReaktan('h', -1)"></div>
+                    <div class="mg-hitbox" style="left: 128px; top: 224px; width: 32px; height: 32px;" onclick="mg_updateReaktan('h', 1)"></div>
+                    <div class="mg-hitbox" style="left: 192px; top: 224px; width: 32px; height: 32px;" onclick="mg_updateReaktan('o', -1)"></div>
+                    <div class="mg-hitbox" style="left: 256px; top: 224px; width: 32px; height: 32px;" onclick="mg_updateReaktan('o', 1)"></div>
+
+                    <div class="mg-hitbox" style="left: 320px; top: 224px; width: 64px; height: 32px;" onclick="mg_openInfo()"></div>
+                    <div class="mg-hitbox" style="left: 384px; top: 224px; width: 64px; height: 32px;" onclick="mg_masukFase3()"></div>
+                </div>
+
+                <div id="mg-info-container" onclick="mg_closeInfo()">
+                    <img class="mg-layer" src="popupinfopb.png" alt="Layar Info" style="z-index: 51;">
+                </div>
+            </div>
+
+            <div id="mg-phase3-container">
+                <img class="mg-layer" src="kanvaspbexam.png" alt="Lab Exam Background" style="z-index: 1;">
+                <img id="mg-sprite-natori-exam" class="mg-sprite active" src="natori_neutral.png" alt="Natori" style="z-index: 5;">
+                <img id="mg-sprite-kurori-exam" class="mg-sprite hidden" src="kurori_victory.png" alt="Kurori" style="z-index: 5;">
+
+                <div id="mg-ui-exam-dialog">
+                    <img class="mg-layer" src="txtbox.png" alt="Textbox" style="opacity: 0.75; z-index: 10;">
+                    <img class="mg-layer" src="keynextskip.png" alt="Next Skip" style="z-index: 11;">
+                    <div id="mg-dialog-area-3" class="mg-dialog-area">
+                        <div id="mg-dialog-name-3" class="mg-dialog-name">Natori:</div>
+                        <div id="mg-dialog-text-3" class="mg-dialog-text"></div>
+                    </div>
+                    <div class="mg-hitbox" style="left: 448px; top: 192px; width: 32px; height: 32px; z-index: 12;" onclick="mg_handleDialogPhase3()"></div>
+                    <div class="mg-hitbox" style="left: 448px; top: 224px; width: 32px; height: 32px; z-index: 12;" onclick="mg_handleDialogPhase3()"></div>
+                </div>
+                
+                <div id="mg-quiz-ui-container">
+                    <img class="mg-layer" src="keyabc.png" alt="Tombol ABC" style="z-index: 10;">
+                    <div id="mg-quiz-score" class="mg-quiz-text" style="left: 320px; top: 32px; width: 144px; height: 32px; justify-content: flex-end; color: #ffcc00; font-size: 18px; padding-right: 8px;">Skor = 0/4</div>
+                    <div id="mg-quiz-question" class="mg-quiz-text" style="left: 32px; top: 64px; width: 448px; height: 96px;"></div>
+                    
+                    <div class="mg-hitbox" style="left: 32px; top: 160px; width: 32px; height: 32px; z-index: 12;" onclick="mg_answerQuiz(0)"></div>
+                    <div class="mg-hitbox" style="left: 32px; top: 192px; width: 32px; height: 32px; z-index: 12;" onclick="mg_answerQuiz(1)"></div>
+                    <div class="mg-hitbox" style="left: 32px; top: 224px; width: 32px; height: 32px; z-index: 12;" onclick="mg_answerQuiz(2)"></div>
+
+                    <div id="mg-ans-0" class="mg-quiz-text mg-quiz-ans" style="left: 64px; top: 160px; width: 416px; height: 32px;"></div>
+                    <div id="mg-ans-1" class="mg-quiz-text mg-quiz-ans" style="left: 64px; top: 192px; width: 416px; height: 32px;"></div>
+                    <div id="mg-ans-2" class="mg-quiz-text mg-quiz-ans" style="left: 64px; top: 224px; width: 416px; height: 32px;"></div>
+                </div>
+
+                <div id="mg-result-ui-container">
+                    <img id="mg-result-img" class="mg-layer" src="" alt="Result Overlay" style="z-index: 20;">
+                    <div id="mg-hitbox-done" class="mg-hitbox" style="left: 192px; top: 224px; width: 128px; height: 32px; z-index: 21; display: none;" onclick="mg_selesaikanLobby()"></div>
+                    <div id="mg-hitbox-retry" class="mg-hitbox" style="left: 160px; top: 224px; width: 96px; height: 32px; z-index: 21; display: none;" onclick="mg_ulangiSimulasi()"></div>
+                    <div id="mg-hitbox-close" class="mg-hitbox" style="left: 256px; top: 224px; width: 96px; height: 32px; z-index: 21; display: none;" onclick="mg_selesaikanLobby()"></div>
+                </div>
+            </div>
+
+            <img class="mg-layer" src="keyexit.png" alt="Tombol Keluar" style="z-index: 40;"> 
+            <div class="mg-hitbox" style="left: 480px; top: 0px; width: 32px; height: 32px; z-index: 41;" onclick="mg_openExitPopup()"></div>
+
+            <div id="mg-dark-overlay"></div>
+            <div id="mg-popup-exit-container">
+                <img class="mg-layer" src="popupexit.png" alt="Popup Konfirmasi" style="z-index: 62;">
+                <div class="mg-hitbox" style="left: 160px; top: 160px; width: 96px; height: 32px; z-index: 65;" onclick="mg_selesaikanLobby()"></div>
+                <div class="mg-hitbox" style="left: 256px; top: 160px; width: 96px; height: 32px; z-index: 65;" onclick="mg_closeExitPopup()"></div>
+            </div>
+        </div>
+
     </div>
 
     <script>
+        // ================= VARIABEL MAIN GAME =================
         const playerElement = document.getElementById('player');
         const cutsceneLayer = document.getElementById('cutscene-layer');
         const logContent = document.getElementById('statlog-content');
@@ -206,6 +373,7 @@
         const creditsLayer = document.getElementById('credits-layer');
         
         const TILE_SIZE = 32;
+        let inMinigame = false; // FLAG ISOLASI MINIGAME
         
         const collisionMap = [
             [  1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1 ],
@@ -232,9 +400,7 @@
             if (!inTitleScreen) return;
             inTitleScreen = false;
             titleScreenLayer.classList.add('fade-out');
-            setTimeout(() => {
-                titleScreenLayer.style.display = 'none';
-            }, 3000); 
+            setTimeout(() => { titleScreenLayer.style.display = 'none'; }, 3000); 
         }
 
         function showCredit() {
@@ -245,10 +411,7 @@
 
         function closeCredit() {
             creditsLayer.style.animation = 'fadeOutFast 0.3s forwards';
-            setTimeout(() => {
-                creditsLayer.style.display = 'none';
-                creditsLayer.style.animation = ''; // Reset animasi
-            }, 300);
+            setTimeout(() => { creditsLayer.style.display = 'none'; creditsLayer.style.animation = ''; }, 300);
         }
 
         // --- SISTEM STATUS LOG ---
@@ -284,10 +447,7 @@
             processLog();
         }
 
-        function addLog(type, text) {
-            logQueue.push({ type, text });
-            processLog();
-        }
+        function addLog(type, text) { logQueue.push({ type, text }); processLog(); }
 
         const triggeredEvents = { start: false, doorMain: false, closetN8: false, labArea: false, doorLab: false, natoriIntro: false };
 
@@ -298,34 +458,17 @@
                 addLog('status', 'memuat map');
                 addLog('kurori', 'cuaca yang cerah untuk hari yang luar biasa!');
                 addLog('kurori', 'hari ini adalah hari pertamaku ke laboratorium');
-                addLog('kurori', 'semoga aku beruntung hari ini :3');
             }
             if (!triggeredEvents.doorMain && (pos === '12,4' || pos === '13,4')) {
                 triggeredEvents.doorMain = true; addLog('status', 'melewati pintu utama');
             }
-            if (!triggeredEvents.closetN8 && pos === '13,7') {
-                triggeredEvents.closetN8 = true; addLog('kurori', 'wah lemari apa itu? tampaknya menarik.');
-            }
-            if (!triggeredEvents.labArea && (pos === '11,5' || pos === '11,6' || pos === '11,7')) {
-                triggeredEvents.labArea = true; addLog('kurori', 'laboratorium kimia, benarkah ini ruangannya?');
-            }
             if (!triggeredEvents.doorLab && pos === '10,6') {
                 triggeredEvents.doorLab = true; addLog('status', 'melewati pintu laboratorium kimia dasar');
-            }
-            if (!triggeredEvents.natoriIntro && pos === '9,6') {
-                triggeredEvents.natoriIntro = true;
-                addLog('kurori', 'permisi... apakah benar ini ruang laboratorium kimia?');
-                addLog('natori', 'iya benar ini ruangannya');
-                addLog('natori', 'selamat datang diruang laboratorium kimia');
-                addLog('natori', 'perkenalkan nama saya natori, saya adalah laboran disini');
-                addLog('natori', 'jika kamu perlu bantuanku, aku ada disini untuk membantu!');
-                addLog('natori', 'senang bertemu denganmu!');
-                addLog('kurori', 'senang bertemu denganmu juga!');
             }
         }
 
         function toggleSettings() {
-            if (inCutscene || inTitleScreen) return;
+            if (inCutscene || inTitleScreen || inMinigame) return;
             isSettingsOpen = !isSettingsOpen;
             settingsModal.style.display = isSettingsOpen ? 'block' : 'none';
             dimOverlay.style.display = isSettingsOpen ? 'block' : 'none';
@@ -334,18 +477,15 @@
         function toggleHud() {
             isHudHidden = !isHudHidden;
             hudElements.forEach(el => {
-                if(isHudHidden) el.classList.add('hide-hud');
-                else el.classList.remove('hide-hud');
+                if(isHudHidden) el.classList.add('hide-hud'); else el.classList.remove('hide-hud');
             });
             settingsModal.style.backgroundImage = isHudHidden ? "url('setting0.png')" : "url('setting1.png')";
             toggleSettings(); 
         }
 
         function exitGame() { 
-            toggleSettings(); 
-            inTitleScreen = true;
-            titleScreenLayer.style.display = 'block';
-            titleScreenLayer.classList.remove('fade-out'); 
+            toggleSettings(); inTitleScreen = true;
+            titleScreenLayer.style.display = 'block'; titleScreenLayer.classList.remove('fade-out'); 
         }
 
         function movePlayer(dCol, dRow) {
@@ -356,70 +496,300 @@
                     if (dCol === 1 && !isFacingRight) { playerElement.classList.remove('face-left'); isFacingRight = true; } 
                     else if (dCol === -1 && isFacingRight) { playerElement.classList.add('face-left'); isFacingRight = false; }
                     playerElement.src = "walk.gif";
-                    playerElement.style.left = (currentCol * TILE_SIZE) + "px";
-                    playerElement.style.top = (currentRow * TILE_SIZE) + "px";
+                    playerElement.style.left = (currentCol * TILE_SIZE) + "px"; playerElement.style.top = (currentRow * TILE_SIZE) + "px";
                     setTimeout(() => { playerElement.src = "stay.png"; isMoving = false; }, 250);
                 }
             }
         }
 
-        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-        let skipResolver = null;
-        const waitForSkipOrTimeout = (ms) => new Promise(resolve => {
-            let timeout = setTimeout(() => { skipResolver = null; resolve(); }, ms);
-            skipResolver = () => { clearTimeout(timeout); skipResolver = null; resolve(); };
-        });
-
-        async function playEasterEgg() {
-            inCutscene = true;
-            hudElements.forEach(el => el.classList.add('hide-hud'));
-            document.getElementById('keysetting-img').style.display = 'none';
-            document.getElementById('btn-setting-hitbox').style.display = 'none';
-            activeKeys.up = activeKeys.down = activeKeys.left = activeKeys.right = false;
-
-            await delay(1000); cutsceneLayer.src = "egglayer1open.png"; cutsceneLayer.style.display = "block";
-            await delay(1000); cutsceneLayer.src = "egglayer2.png";
-            await delay(2000); cutsceneLayer.src = "egglayer3.png"; await waitForSkipOrTimeout(5000);
-            cutsceneLayer.src = "egglayer4.gif"; await delay(6000);
-            cutsceneLayer.src = "egglayer5.png"; await waitForSkipOrTimeout(5000);
-            cutsceneLayer.src = "egglayer6.png"; await delay(3000);
-            cutsceneLayer.src = "egglayer7close.png";
-        }
-
         function handleAction() {
-            if (isSettingsOpen || inTitleScreen) return;
+            if (isSettingsOpen || inTitleScreen || inMinigame) return;
             if (inCutscene) { if (skipResolver) skipResolver(); return; }
             if (isMoving) return; 
             const tilePos = `${currentCol},${currentRow}`;
 
-            if (tilePos === "8,0") { addLog('iteminfo', 'APAR / Alat Pemadam Api Ringan. Benda ini untuk memadamkan kebakaran kecil secara cepat.'); return; }
-            if (tilePos === "0,8") { addLog('iteminfo', 'Pancuran Darurat dan Air Mancur Pencuci Mata. Fasilitas ini dirancang untuk dekontaminasi segera ketika seseorang terpapar bahan berbahaya.'); return; }
-            if (tilePos === "0,1") { addLog('iteminfo', 'Tempat Sampah. Benda ini digunakan untuk tempat pembuangan limbah padat.'); return; }
-            if (tilePos === "9,0") { addLog('iteminfo', 'Kotak P3K. Berisi alat medis dan obat-obatan untuk penanganan kecelakaan kerja.'); return; }
+            // PEMICU MINIGAME PROUST
+            if (tilePos === "3,5") { startMinigameProust(); return; }
 
-            if (tilePos === "9,8" && !hasEggKey) {
-                hasEggKey = true; document.getElementById('egg-key').style.display = 'none';
-                addLog('mind', '*Kunci apa ini? Terasa sangat dingin... Natori sepertinya tidak menyadarinya.*');
-                return;
-            }
-            if (tilePos === "1,0") {
-                if (hasEggKey) playEasterEgg();
-                else { addLog('status', 'pintu terkunci'); addLog('warning', 'anda tidak diizinkan untuk memasukinya'); }
-                return;
-            }
-            if (tilePos === "15,6") { addLog('status', 'pintu terkunci'); addLog('warning', 'anda tidak diizinkan untuk memasukinya'); return; }
-            if (tilePos === "9,1") {
-                addLog('status', 'meninggalkan ruang laboratorium kimia');
-                currentCol = 11; currentRow = 1;
-                playerElement.style.transition = 'none';
-                playerElement.style.left = (currentCol * TILE_SIZE) + "px"; playerElement.style.top = (currentRow * TILE_SIZE) + "px";
-                setTimeout(() => playerElement.style.transition = 'left 0.25s linear, top 0.25s linear', 50);
-                return;
-            }
+            if (tilePos === "8,0") { addLog('iteminfo', 'APAR. Untuk memadamkan kebakaran kecil.'); return; }
+            if (tilePos === "0,8") { addLog('iteminfo', 'Pancuran Darurat. Untuk dekontaminasi bahan berbahaya.'); return; }
+            if (tilePos === "0,1") { addLog('iteminfo', 'Tempat Sampah. Tempat pembuangan limbah padat.'); return; }
+            if (tilePos === "9,0") { addLog('iteminfo', 'Kotak P3K. Berisi alat medis dan obat-obatan.'); return; }
         }
 
+        // ================= KODE MINIGAME PROUST =================
+        let mg_currentPhase = 1;
+        const mgFadeOverlay = document.getElementById('mg-fade-overlay');
+        const mgTypingSpeed = 30; 
+        let mg_typeInterval; let mg_autoNextTimeout;
+
+        const mg_dialogData1 = [
+            { char: 'kurori', img: 'kurori_excited.png', name: 'Kurori', text: "Natori, Natori! Alat 'Percobaan Reaksi Perbandingan Tetap' sudah siap nih!" },
+            { char: 'kurori', img: 'kurori_excited.png', name: 'Kurori', text: "Wah, aku penasaran banget! Katanya alam itu punya resep rahasia buat bikin air yang nggak bisa ditawar-tawar takarannya, ya? Beneran gitu?!" },
+            { char: 'natori', img: 'natori_neutral.png', name: 'Natori', text: "Haha, semangat sekali kamu hari ini, Kurori! Iya, itu benar." },
+            { char: 'natori', img: 'natori_explaining.png', name: 'Natori', text: "Alam kita ini sangat luar biasa dan teratur. Seberapa banyak pun bahan yang kamu campurkan, molekul-molekul itu hanya mau bergabung sesuai dengan perbandingan pastinya." },
+            { char: 'kurori', img: 'kurori_excited.png', name: 'Kurori', text: "Woah, keren banget! Berarti kalau aku iseng masukin bahan kebanyakan, bakal ada sisa gas yang terbuang sia-sia dong?" },
+            { char: 'kurori', img: 'kurori_excited.png', name: 'Kurori', text: "Hehe, aku jadi pengen coba masukin angka asal-asalan buat lihat apa yang terjadi! Nggak apa-apa kan kalau aku salah tebak rasio awalnya?" },
+            { char: 'natori', img: 'natori_encouraging.png', name: 'Natori', text: "Tentu saja tidak apa-apa! Justru dari mencoba dan melihat sisa bahan yang terbuang itulah kamu akan belajar betapa pentingnya efisiensi bagi bumi kita." },
+            { char: 'natori', img: 'natori_explaining.png', name: 'Natori', text: "Yuk, langsung saja mainkan tombol plus dan minus di panel simulasi ini untuk menemukan rasio rahasianya. Semangat bereksperimen, Kurori!" }
+        ];
+
+        let mg_panel1 = 0; let mg_isTyping1 = false;
+        const mg_dialogText1 = document.getElementById('mg-dialog-text-1');
+        const mg_dialogName1 = document.getElementById('mg-dialog-name-1');
+        const mg_phase1Container = document.getElementById('mg-phase1-container');
+
+        function startMinigameProust() {
+            inMinigame = true;
+            document.getElementById('minigame-proust').style.display = 'block';
+            mg_currentPhase = 1; mg_panel1 = 0;
+            
+            document.getElementById('mg-phase1-container').style.display = 'block';
+            document.getElementById('mg-phase2-container').style.display = 'none';
+            document.getElementById('mg-phase3-container').style.display = 'none';
+            document.getElementById('mg-popup-exit-container').style.display = 'none';
+            document.getElementById('mg-dark-overlay').style.display = 'none';
+            
+            mg_renderDialogPhase1();
+            addLog('status', 'memasuki simulasi Hukum Proust');
+        }
+
+        function mg_renderDialogPhase1() {
+            clearTimeout(mg_autoNextTimeout); clearInterval(mg_typeInterval); mg_dialogText1.innerHTML = "";
+            if (mg_panel1 >= mg_dialogData1.length) { mg_masukFase2(); return; }
+
+            let data = mg_dialogData1[mg_panel1];
+            mg_dialogName1.innerText = data.name + ":";
+
+            const sKurori = document.getElementById('mg-sprite-kurori');
+            const sNatori = document.getElementById('mg-sprite-natori');
+
+            if (data.char === 'kurori') {
+                sKurori.src = data.img; sKurori.className = "mg-sprite active";
+                if(mg_panel1 > 0) sNatori.className = "mg-sprite inactive"; 
+            } else {
+                sNatori.src = data.img; sNatori.className = "mg-sprite active";
+                sKurori.className = "mg-sprite inactive";
+            }
+
+            mg_isTyping1 = true; let i = 0;
+            mg_typeInterval = setInterval(() => {
+                mg_dialogText1.innerHTML += data.text.charAt(i); i++;
+                if (i >= data.text.length) {
+                    clearInterval(mg_typeInterval); mg_dialogText1.innerHTML = data.text; mg_isTyping1 = false;
+                    mg_autoNextTimeout = setTimeout(() => { mg_panel1++; mg_renderDialogPhase1(); }, 10000);
+                }
+            }, mgTypingSpeed);
+        }
+
+        function mg_handleNextPhase1() {
+            if (mg_isTyping1) {
+                clearInterval(mg_typeInterval); mg_dialogText1.innerHTML = mg_dialogData1[mg_panel1].text; mg_isTyping1 = false;
+                clearTimeout(mg_autoNextTimeout); mg_autoNextTimeout = setTimeout(() => { mg_panel1++; mg_renderDialogPhase1(); }, 10000);
+            } else { mg_panel1++; mg_renderDialogPhase1(); }
+        }
+
+        function mg_handleSkipPhase1() { clearTimeout(mg_autoNextTimeout); clearInterval(mg_typeInterval); mg_masukFase2(); }
+
+        const mg_phase2Container = document.getElementById('mg-phase2-container');
+        let mg_h = 1; let mg_o = 1;
+
+        function mg_masukFase2() {
+            if (mg_currentPhase === 2) return; mg_currentPhase = 2; 
+            mgFadeOverlay.style.opacity = '1';
+            setTimeout(() => {
+                mg_phase1Container.style.display = 'none'; mg_phase2Container.style.display = 'block';
+                mg_renderDisplay(); mgFadeOverlay.style.opacity = '0';
+            }, 1000); 
+        }
+
+        function mg_updateReaktan(tipe, nilai) {
+            if (tipe === 'h') { mg_h += nilai; if (mg_h < 1) mg_h = 1; if (mg_h > 4) mg_h = 4; } 
+            else if (tipe === 'o') { mg_o += nilai; if (mg_o < 1) mg_o = 1; if (mg_o > 4) mg_o = 4; }
+            mg_renderDisplay();
+        }
+
+        function mg_renderDisplay() {
+            document.getElementById('mg-anim-layer').src = `pbh${mg_h}o${mg_o}.gif`;
+            let produkText = ""; let h2oTerbentuk = Math.min(mg_h, mg_o * 2); 
+            let sisaH = mg_h - h2oTerbentuk; let sisaO = mg_o - (h2oTerbentuk / 2);
+
+            document.getElementById('mg-text-h').innerHTML = `${mg_h === 1 ? '' : `<span class="mg-coef">${mg_h}</span>`}H<sub>2(g)</sub>`;
+            document.getElementById('mg-text-o').innerHTML = `${mg_o === 1 ? '' : `<span class="mg-coef">${mg_o}</span>`}O<sub>2(g)</sub>`;
+
+            if (h2oTerbentuk > 0) produkText += `${h2oTerbentuk === 1 ? '' : `<span class="mg-coef">${h2oTerbentuk}</span>`}H<sub>2</sub>O<sub>(l)</sub>`;
+            if (sisaH > 0) produkText += `${produkText !== "" ? " + " : ""}${sisaH === 1 ? '' : `<span class="mg-coef">${sisaH}</span>`}H<sub>2(g)</sub>`;
+            if (sisaO > 0) produkText += `${produkText !== "" ? " + " : ""}${sisaO === 1 ? '' : (sisaO === 0.5 ? `<span class="mg-coef">½</span>` : (sisaO === 1.5 ? `<span class="mg-coef">1½</span>` : (sisaO === 2.5 ? `<span class="mg-coef">2½</span>` : (sisaO === 3.5 ? `<span class="mg-coef">3½</span>` : `<span class="mg-coef">${sisaO}</span>`))))}O<sub>2(g)</sub>`;
+            document.getElementById('mg-text-h2o').innerHTML = produkText;
+        }
+
+        const mg_phase3Container = document.getElementById('mg-phase3-container');
+        const mg_uiExamDialog = document.getElementById('mg-ui-exam-dialog');
+        const mg_dialogText3 = document.getElementById('mg-dialog-text-3');
+        const mg_dialogName3 = document.getElementById('mg-dialog-name-3');
+        const mg_spriteNatoriExam = document.getElementById('mg-sprite-natori-exam');
+        const mg_spriteKuroriExam = document.getElementById('mg-sprite-kurori-exam');
+        const mg_quizUiContainer = document.getElementById('mg-quiz-ui-container');
+        const mg_resultUiContainer = document.getElementById('mg-result-ui-container');
+
+        const mg_quizData = [
+            { q: "Dari simulasi yang baru saja kamu mainkan, berapa rasio jumlah molekul gas Hidrogen (H2) dan gas Oksigen (O2) yang selalu dibutuhkan untuk membentuk molekul air (H2O) dengan sempurna tanpa sisa?", ans: ["A. 1 molekul H2 : 1 molekul O2", "B. 2 molekul H2 : 1 molekul O2", "C. 2 molekul H2 : 2 molekul O2"], correct: 1 },
+            { q: "Nah, kalau ingin membuat tepat 4 molekul air (H2O) tanpa ada satu pun gas yang terbuang sia-sia, berapa banyak H2 dan O2 yang harus disiapkan?", ans: ["A. 4 molekul H2 dan 4 molekul O2", "B. 2 molekul H2 dan 4 molekul O2", "C. 4 molekul H2 dan 2 molekul O2"], correct: 2 },
+            { q: "Coba ingat-ingat lagi! Kalau kamu mencampurkan 3 molekul H2 dan 1 molekul O2, apa yang akan terjadi di akhir reaksi?", ans: ["A. Terbentuk 3 molekul air (H2O)", "B. Terbentuk 2 molekul air (H2O) dan tersisa 1 molekul H2.", "C. Terbentuk 2 molekul air (H2O) dan tersisa 1 molekul O2."], correct: 1 },
+            { q: "Memahami Hukum Perbandingan Tetap ini ternyata sangat penting bagi industri kimia untuk mendukung kelestarian bumi (ESD). Menurutmu, apa alasan utamanya?", ans: ["A. Agar pabrik bisa memproduksi bahan kimia sebanyak-banyaknya", "B. Untuk memastikan efisiensi bahan baku.", "C. Supaya produk kimia bisa dijual dengan harga mahal."], correct: 1 }
+        ];
+
+        let mg_phase3State = "intro"; let mg_qIndex = 0; let mg_skor = 0;
+        let mg_outroDialogData = []; let mg_outroPanel = 0; let mg_isTyping3 = false;
+
+        function mg_masukFase3() {
+            if (mg_currentPhase === 3) return; mg_currentPhase = 3;
+            mgFadeOverlay.style.opacity = '1';
+            setTimeout(() => {
+                mg_phase2Container.style.display = 'none'; mg_phase3Container.style.display = 'block';
+                mg_uiExamDialog.style.display = 'block'; mg_uiExamDialog.style.opacity = '1';
+                mg_spriteNatoriExam.src = "natori_neutral.png"; mg_spriteNatoriExam.style.transform = 'translateX(0)'; mg_spriteNatoriExam.className = "mg-sprite active";
+                mg_spriteKuroriExam.className = "mg-sprite hidden";
+                mg_quizUiContainer.style.display = 'none'; mg_resultUiContainer.style.display = 'none';
+                
+                mgFadeOverlay.style.opacity = '0'; mg_phase3State = "intro";
+                mg_startPhase3Dialog([{ char: 'natori', name: 'Natori', text: "Sudah selesai bereksperimen? Ayo kita tes kemampuanmu dengan pertanyaan berikut!" }]);
+            }, 1000);
+        }
+
+        function mg_startPhase3Dialog(dataArray) { mg_outroDialogData = dataArray; mg_outroPanel = 0; mg_renderPhase3Dialog(); }
+
+        function mg_renderPhase3Dialog() {
+            clearTimeout(mg_autoNextTimeout); clearInterval(mg_typeInterval); mg_dialogText3.innerHTML = "";
+            if (mg_outroPanel >= mg_outroDialogData.length) {
+                if (mg_phase3State === "intro") mg_endIntroStartQuiz();
+                else if (mg_phase3State === "outro") mg_showResultButtons();
+                return;
+            }
+
+            let data = mg_outroDialogData[mg_outroPanel];
+            mg_dialogName3.innerText = data.name + ":";
+
+            if (mg_phase3State === "outro") {
+                if (data.char === 'kurori') { mg_spriteKuroriExam.className = "mg-sprite active"; mg_spriteNatoriExam.className = "mg-sprite inactive"; } 
+                else { mg_spriteNatoriExam.className = "mg-sprite active"; mg_spriteKuroriExam.className = "mg-sprite inactive"; }
+            }
+
+            mg_isTyping3 = true; let i = 0;
+            mg_typeInterval = setInterval(() => {
+                mg_dialogText3.innerHTML += data.text.charAt(i); i++;
+                if (i >= data.text.length) {
+                    clearInterval(mg_typeInterval); mg_dialogText3.innerHTML = data.text; mg_isTyping3 = false;
+                    mg_autoNextTimeout = setTimeout(() => { mg_outroPanel++; mg_renderPhase3Dialog(); }, 10000);
+                }
+            }, mgTypingSpeed);
+        }
+
+        function mg_handleDialogPhase3() {
+            if (mg_isTyping3) {
+                clearInterval(mg_typeInterval); mg_dialogText3.innerHTML = mg_outroDialogData[mg_outroPanel].text; mg_isTyping3 = false;
+                clearTimeout(mg_autoNextTimeout); mg_autoNextTimeout = setTimeout(() => { mg_outroPanel++; mg_renderPhase3Dialog(); }, 10000);
+            } else { mg_outroPanel++; mg_renderPhase3Dialog(); }
+        }
+
+        function mg_endIntroStartQuiz() {
+            mg_phase3State = "quiz"; mg_uiExamDialog.style.opacity = '0'; 
+            mg_spriteNatoriExam.style.transform = 'translateX(100%)'; 
+            setTimeout(() => {
+                mg_uiExamDialog.style.display = 'none'; mg_quizUiContainer.style.display = 'block'; mg_quizUiContainer.style.opacity = '1';
+                mg_qIndex = 0; mg_skor = 0; mg_renderQuiz();
+            }, 800);
+        }
+
+        function mg_renderQuiz() {
+            document.getElementById('mg-quiz-score').innerText = `Skor = ${mg_skor}/4`;
+            let qData = mg_quizData[mg_qIndex];
+            document.getElementById('mg-quiz-question').innerText = qData.q;
+            document.getElementById('mg-ans-0').innerText = qData.ans[0];
+            document.getElementById('mg-ans-1').innerText = qData.ans[1];
+            document.getElementById('mg-ans-2').innerText = qData.ans[2];
+        }
+
+        function mg_answerQuiz(selectedIdx) {
+            if (mg_phase3State !== "quiz") return;
+            if (selectedIdx === mg_quizData[mg_qIndex].correct) mg_skor++;
+            mg_qIndex++;
+            if (mg_qIndex < mg_quizData.length) { mg_renderQuiz(); } else { mg_startOutro(); }
+        }
+
+        function mg_startOutro() {
+            mg_phase3State = "outro"; mg_quizUiContainer.style.opacity = '0';
+            document.getElementById('mg-quiz-score').innerText = `Skor = ${mg_skor}/4`; 
+            setTimeout(() => {
+                mg_quizUiContainer.style.display = 'none'; mg_uiExamDialog.style.display = 'block'; mg_uiExamDialog.style.opacity = '1';
+                let outroScript = []; mg_spriteNatoriExam.style.transform = 'translateX(0)'; 
+
+                if (mg_skor === 4) {
+                    mg_spriteNatoriExam.src = "natori_celebrating.png"; mg_spriteKuroriExam.src = "kurori_victory.png";
+                    outroScript = [
+                        { char: 'natori', name: 'Natori', text: "Hebat sekali! Dengan ketelitianmu ini, kamu siap membantu merancang industri kimia yang ramah lingkungan di masa depan." },
+                        { char: 'kurori', name: 'Kurori', text: "Tentu saja! Bumi kita harus dijaga, tidak boleh ada bahan baku yang terbuang sia-sia lagi!" }
+                    ];
+                } else {
+                    mg_spriteNatoriExam.src = "natori_encouraging.png"; mg_spriteKuroriExam.src = "kurori_excited.png";
+                    outroScript = [
+                        { char: 'natori', name: 'Natori', text: "Tidak apa-apa, sains memang membutuhkan banyak percobaan. Mari kembali ke meja lab dan kita ulangi reaksinya pelan-pelan." },
+                        { char: 'kurori', name: 'Kurori', text: "Tantangan diterima! Kali ini aku akan mencatat perbandingannya dengan jauh lebih teliti, ayo mulai lagi!" }
+                    ];
+                }
+                mg_startPhase3Dialog(outroScript);
+            }, 500);
+        }
+
+        function mg_showResultButtons() {
+            mg_phase3State = "result"; mg_uiExamDialog.style.opacity = '0'; 
+            setTimeout(() => {
+                mg_uiExamDialog.style.display = 'none'; mg_resultUiContainer.style.display = 'block';
+                const resImg = document.getElementById('mg-result-img'); resImg.style.display = 'block';
+                if (mg_skor === 4) {
+                    resImg.src = "keyquestdone.png"; document.getElementById('mg-hitbox-done').style.display = 'block';
+                } else {
+                    resImg.src = "keyquestundone.png"; document.getElementById('mg-hitbox-retry').style.display = 'block'; document.getElementById('mg-hitbox-close').style.display = 'block';
+                }
+            }, 500);
+        }
+
+        function mg_ulangiSimulasi() {
+            mgFadeOverlay.style.opacity = '1';
+            setTimeout(() => {
+                mg_phase3Container.style.display = 'none'; mg_phase2Container.style.display = 'block';
+                mg_currentPhase = 2; mg_h = 1; mg_o = 1; mg_renderDisplay(); 
+                mgFadeOverlay.style.opacity = '0';
+            }, 1000);
+        }
+
+        function mg_selesaikanLobby() { 
+            document.getElementById('minigame-proust').style.display = 'none';
+            inMinigame = false;
+            mg_currentPhase = 1; mg_h = 1; mg_o = 1;
+            clearInterval(mg_typeInterval); clearTimeout(mg_autoNextTimeout);
+            addLog('status', 'menyelesaikan simulasi');
+        }
+
+        function mg_openInfo() { document.getElementById('mg-info-container').classList.add('show'); }
+        function mg_closeInfo() { document.getElementById('mg-info-container').classList.remove('show'); }
+        function mg_openExitPopup() { document.getElementById('mg-dark-overlay').style.display = 'block'; document.getElementById('mg-popup-exit-container').style.display = 'block'; }
+        function mg_closeExitPopup() { document.getElementById('mg-dark-overlay').style.display = 'none'; document.getElementById('mg-popup-exit-container').style.display = 'none'; }
+
+        // ================= LISTENER UTAMA (GABUNGAN) =================
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
+            
+            // Isolasi input jika minigame aktif
+            if (inMinigame) {
+                if (key === ' ' || key === 'enter') {
+                    if (mg_currentPhase === 1) mg_handleNextPhase1();
+                    else if (mg_currentPhase === 3 && (mg_phase3State === "intro" || mg_phase3State === "outro")) mg_handleDialogPhase3();
+                }
+                return; // Stop eksekusi agar Kurori tidak jalan di latar belakang
+            }
+
+            // Input game utama
             if (key === 'escape') toggleSettings();
             if (key === 'w' || key === 'arrowup') activeKeys.up = true;
             if (key === 's' || key === 'arrowdown') activeKeys.down = true;
@@ -429,6 +799,7 @@
         });
 
         window.addEventListener('keyup', (e) => {
+            if (inMinigame) return;
             const key = e.key.toLowerCase();
             if (key === 'w' || key === 'arrowup') activeKeys.up = false;
             if (key === 's' || key === 'arrowdown') activeKeys.down = false;
@@ -447,12 +818,11 @@
 
         document.getElementById('btn-action').addEventListener('pointerdown', (e) => { e.preventDefault(); handleAction(); });
         cutsceneLayer.addEventListener('pointerdown', () => { if (inCutscene && skipResolver) skipResolver(); });
-
         document.getElementById('dpad-container').addEventListener('contextmenu', e => e.preventDefault());
         document.getElementById('btn-action').addEventListener('contextmenu', e => e.preventDefault());
 
         function gameLoop() {
-            if (!isMoving && !inCutscene && !isSettingsOpen && !inTitleScreen) {
+            if (!isMoving && !inCutscene && !isSettingsOpen && !inTitleScreen && !inMinigame) {
                 checkEvents();
                 let dCol = 0; let dRow = 0;
                 if (activeKeys.up) dRow = -1; else if (activeKeys.down) dRow = 1;
