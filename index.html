@@ -7,16 +7,37 @@
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         /* ================= STYLE MAIN GAME ================= */
+        * { box-sizing: border-box; }
+
         body {
             display: flex; justify-content: center; align-items: center;
-            height: 100vh; background-color: #1a1a1a; margin: 0;
+            width: 100vw;
+            height: 100svh; /* ATURAN 2: Aman dari address bar HP */
+            background-color: #1a1a1a; margin: 0;
             overflow: hidden; font-family: sans-serif;
         }
 
+        /* WRAPPER BARU (KONTAINER UTAMA RESPONSIF) */
+        #main-wrapper {
+            aspect-ratio: 16 / 9; /* ATURAN 1: Kunci rasio layar */
+            width: 100%; height: 100%;
+            max-width: calc(100svh * (16 / 9)); /* ATURAN 3: Mentok secara horizontal */
+            max-height: calc(100vw * (9 / 16)); /* ATURAN 3: Mentok secara vertikal */
+            position: relative;
+            container-type: size; /* Mengizinkan kalkulasi ukuran dinamis untuk anak elemen */
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* GAME CONTAINER (Ukuran asli 512x288 yang di-scale up) */
         #game-container {
-            width: 512px; height: 288px; background-image: url('kanvaslab.png');
-            background-size: cover; position: relative; image-rendering: pixelated;
+            width: 512px; height: 288px; 
+            background-image: url('kanvaslab.png');
+            background-size: cover; position: absolute; image-rendering: pixelated;
             border: 2px solid #555; box-shadow: 0 0 20px rgba(0,0,0,0.5); overflow: hidden; 
+            
+            /* Trik Sihir: Skala dinamis mengikuti lebar kontainer utama (100cqi) */
+            transform: scale(calc(100cqi / 512)); 
+            transform-origin: center center;
         }
 
         .marker { position: absolute; width: 32px; height: 32px; }
@@ -70,7 +91,7 @@
         .log-warning { color: #ffff00; }
         .log-mind { color: #ff0090; font-style: italic; opacity: 0.9; }
         .log-iteminfo { color: #00ff00; }
-        .log-star { color: #ffd700; text-shadow: 1px 1px 0 #000; } /* Warna Bintang */
+        .log-star { color: #ffd700; text-shadow: 1px 1px 0 #000; }
 
         #dim-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -224,150 +245,151 @@
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="transition-overlay"></div>
+    <div id="main-wrapper">
+        <div id="game-container">
+            <div id="transition-overlay"></div>
 
-        <div id="titlescreen-layer">
-            <div id="title-bg" class="title-img"></div>
-            <div id="title-keys" class="title-img"></div>
-            <div id="hitbox-mulai" class="title-hitbox" onclick="startGame()"></div>
-            <div id="hitbox-kredit" class="title-hitbox" onclick="showCredit()"></div>
-        </div>
-        <div id="credits-layer">
-            <div class="title-img" style="background-image: url('credits.png');"></div>
-            <div class="title-img" style="background-image: url('keyexit.png');"></div>
-            <div id="hitbox-close-credit" onclick="closeCredit()"></div>
-        </div>
+            <div id="titlescreen-layer">
+                <div id="title-bg" class="title-img"></div>
+                <div id="title-keys" class="title-img"></div>
+                <div id="hitbox-mulai" class="title-hitbox" onclick="startGame()"></div>
+                <div id="hitbox-kredit" class="title-hitbox" onclick="showCredit()"></div>
+            </div>
+            <div id="credits-layer">
+                <div class="title-img" style="background-image: url('credits.png');"></div>
+                <div class="title-img" style="background-image: url('keyexit.png');"></div>
+                <div id="hitbox-close-credit" onclick="closeCredit()"></div>
+            </div>
 
-        <img src="circleexit.gif" class="marker hud-element" style="left: 288px; top: 32px; z-index: 2;" alt="Exit">
-        <img src="circleinfo.gif" class="marker hud-element" style="left: 256px; top: 224px; z-index: 2;" alt="Info i8"> 
-        <img src="circleinfo.gif" class="marker hud-element" style="left: 416px; top: 224px; z-index: 2;" alt="Info n8"> 
+            <img src="circleexit.gif" class="marker hud-element" style="left: 288px; top: 32px; z-index: 2;" alt="Exit">
+            <img src="circleinfo.gif" class="marker hud-element" style="left: 256px; top: 224px; z-index: 2;" alt="Info i8"> 
+            <img src="circleinfo.gif" class="marker hud-element" style="left: 416px; top: 224px; z-index: 2;" alt="Info n8"> 
 
-        <img src="circlequest.gif" class="marker hud-element" style="left: 0px; top: 64px; z-index: 2;" alt="Quest a3">   
-        <img src="circlequest.gif" class="marker hud-element" style="left: 96px; top: 32px; z-index: 2;" alt="Quest d2">  
-        <img src="circlequest.gif" class="marker hud-element" style="left: 96px; top: 160px; z-index: 2;" alt="Quest d6"> 
-        <img src="circlequest.gif" class="marker hud-element" style="left: 96px; top: 256px; z-index: 2;" alt="Quest d9"> 
-        <img src="circlequest.gif" class="marker hud-element" style="left: 192px; top: 32px; z-index: 2;" alt="Quest g2"> 
-        <img src="circlequest.gif" class="marker hud-element" style="left: 192px; top: 160px; z-index: 2;" alt="Quest g6">
-        <img src="circlequest.gif" class="marker hud-element" style="left: 192px; top: 256px; z-index: 2;" alt="Quest g9">
+            <img src="circlequest.gif" class="marker hud-element" style="left: 0px; top: 64px; z-index: 2;" alt="Quest a3">   
+            <img src="circlequest.gif" class="marker hud-element" style="left: 96px; top: 32px; z-index: 2;" alt="Quest d2">  
+            <img src="circlequest.gif" class="marker hud-element" style="left: 96px; top: 160px; z-index: 2;" alt="Quest d6"> 
+            <img src="circlequest.gif" class="marker hud-element" style="left: 96px; top: 256px; z-index: 2;" alt="Quest d9"> 
+            <img src="circlequest.gif" class="marker hud-element" style="left: 192px; top: 32px; z-index: 2;" alt="Quest g2"> 
+            <img src="circlequest.gif" class="marker hud-element" style="left: 192px; top: 160px; z-index: 2;" alt="Quest g6">
+            <img src="circlequest.gif" class="marker hud-element" style="left: 192px; top: 256px; z-index: 2;" alt="Quest g9">
 
-        <img src="eggkey.png" id="egg-key" class="marker" style="left: 288px; top: 256px;" alt="Rahasia">
-        <img src="standn.gif" id="natori" class="marker" style="left: 288px; top: 256px;" alt="Natori">
-        <img src="stay.png" id="player" alt="Karakter" style="left: 416px; top: 32px;"> 
+            <img src="eggkey.png" id="egg-key" class="marker" style="left: 288px; top: 256px;" alt="Rahasia">
+            <img src="standn.gif" id="natori" class="marker" style="left: 288px; top: 256px;" alt="Natori">
+            <img src="stay.png" id="player" alt="Karakter" style="left: 416px; top: 32px;"> 
 
-        <div id="statlog-img" class="fullscreen-ui hud-element"></div>
-        <div id="statlog-content" class="hud-element"></div>
-        <div id="statprofile-img" class="fullscreen-ui hud-element"></div>
-        
-        <div id="dpad-container" class="hud-element">
-            <div id="btn-up" class="d-btn"></div>
-            <div id="btn-down" class="d-btn"></div>
-            <div id="btn-left" class="d-btn"></div>
-            <div id="btn-right" class="d-btn"></div>
-        </div>
-        <div id="btn-action" class="hud-element"></div>
-
-        <div id="keysetting-img" class="fullscreen-ui"></div>
-        <div id="btn-setting-hitbox" onclick="toggleSettings()"></div>
-        <div id="dim-overlay" onclick="toggleSettings()"></div>
-        <div id="settings-modal">
-            <div id="hitbox-kembali" class="setting-hitbox" onclick="toggleSettings()"></div>
-            <div id="hitbox-hud" class="setting-hitbox" onclick="toggleHud()"></div>
-            <div id="hitbox-keluar" class="setting-hitbox" onclick="exitGame()"></div>
-        </div>
-
-        <img id="cutscene-layer" src="" alt="Cutscene">
-
-        <div id="minigame-proust">
-            <div id="mg-fade-overlay"></div>
+            <div id="statlog-img" class="fullscreen-ui hud-element"></div>
+            <div id="statlog-content" class="hud-element"></div>
+            <div id="statprofile-img" class="fullscreen-ui hud-element"></div>
             
-            <div id="mg-phase1-container">
-                <img class="mg-layer" src="kanvaspbbg.png" alt="Lab Background" style="z-index: 1;">
-                <img id="mg-sprite-kurori" class="mg-sprite hidden" src="kurori_excited.png" alt="Kurori">
-                <img id="mg-sprite-natori" class="mg-sprite hidden" src="natori_neutral.png" alt="Natori">
-                <img class="mg-layer" src="txtbox.png" alt="Textbox" style="opacity: 0.75; z-index: 10;">
-                <img class="mg-layer" src="keynextskip.png" alt="Next Skip" style="z-index: 11;">
-                <div id="mg-dialog-area-1" class="mg-dialog-area">
-                    <div id="mg-dialog-name-1" class="mg-dialog-name"></div>
-                    <div id="mg-dialog-text-1" class="mg-dialog-text"></div>
-                </div>
-                <div class="mg-hitbox" style="left: 448px; top: 192px; width: 32px; height: 32px; z-index: 12;" onclick="mg_handleNextPhase1()"></div>
-                <div class="mg-hitbox" style="left: 448px; top: 224px; width: 32px; height: 32px; z-index: 12;" onclick="mg_handleSkipPhase1()"></div>
+            <div id="dpad-container" class="hud-element">
+                <div id="btn-up" class="d-btn"></div>
+                <div id="btn-down" class="d-btn"></div>
+                <div id="btn-left" class="d-btn"></div>
+                <div id="btn-right" class="d-btn"></div>
+            </div>
+            <div id="btn-action" class="hud-element"></div>
+
+            <div id="keysetting-img" class="fullscreen-ui"></div>
+            <div id="btn-setting-hitbox" onclick="toggleSettings()"></div>
+            <div id="dim-overlay" onclick="toggleSettings()"></div>
+            <div id="settings-modal">
+                <div id="hitbox-kembali" class="setting-hitbox" onclick="toggleSettings()"></div>
+                <div id="hitbox-hud" class="setting-hitbox" onclick="toggleHud()"></div>
+                <div id="hitbox-keluar" class="setting-hitbox" onclick="exitGame()"></div>
             </div>
 
-            <div id="mg-phase2-container">
-                <img class="mg-layer" src="kanvaspb.png" alt="Canvas Dasar">
-                <img id="mg-anim-layer" class="mg-layer" src="pbh1o1.gif" alt="Animasi Reaksi" style="z-index: 2;">
-                <img class="mg-layer" src="keypbplusminus.png" alt="UI Bawah" style="z-index: 10;">
+            <img id="cutscene-layer" src="" alt="Cutscene">
 
-                <div id="mg-phase2-interactables">
-                    <div id="mg-text-h" class="mg-text-box">H<sub>2(g)</sub></div>
-                    <div id="mg-text-o" class="mg-text-box">O<sub>2(g)</sub></div>
-                    <div id="mg-text-h2o" class="mg-text-box">H<sub>2</sub>O<sub>(l)</sub></div>
-
-                    <div class="mg-hitbox" style="left: 64px; top: 224px; width: 32px; height: 32px;" onclick="mg_updateReaktan('h', -1)"></div>
-                    <div class="mg-hitbox" style="left: 128px; top: 224px; width: 32px; height: 32px;" onclick="mg_updateReaktan('h', 1)"></div>
-                    <div class="mg-hitbox" style="left: 192px; top: 224px; width: 32px; height: 32px;" onclick="mg_updateReaktan('o', -1)"></div>
-                    <div class="mg-hitbox" style="left: 256px; top: 224px; width: 32px; height: 32px;" onclick="mg_updateReaktan('o', 1)"></div>
-
-                    <div class="mg-hitbox" style="left: 320px; top: 224px; width: 64px; height: 32px;" onclick="mg_openInfo()"></div>
-                    <div class="mg-hitbox" style="left: 384px; top: 224px; width: 64px; height: 32px;" onclick="mg_masukFase3()"></div>
-                </div>
-
-                <div id="mg-info-container" onclick="mg_closeInfo()">
-                    <img class="mg-layer" src="popupinfopb.png" alt="Layar Info" style="z-index: 51;">
-                </div>
-            </div>
-
-            <div id="mg-phase3-container">
-                <img class="mg-layer" src="kanvaspbexam.png" alt="Lab Exam Background" style="z-index: 1;">
-                <img id="mg-sprite-natori-exam" class="mg-sprite active" src="natori_neutral.png" alt="Natori" style="z-index: 5;">
-                <img id="mg-sprite-kurori-exam" class="mg-sprite hidden" src="kurori_victory.png" alt="Kurori" style="z-index: 5;">
-
-                <div id="mg-ui-exam-dialog">
+            <div id="minigame-proust">
+                <div id="mg-fade-overlay"></div>
+                
+                <div id="mg-phase1-container">
+                    <img class="mg-layer" src="kanvaspbbg.png" alt="Lab Background" style="z-index: 1;">
+                    <img id="mg-sprite-kurori" class="mg-sprite hidden" src="kurori_excited.png" alt="Kurori">
+                    <img id="mg-sprite-natori" class="mg-sprite hidden" src="natori_neutral.png" alt="Natori">
                     <img class="mg-layer" src="txtbox.png" alt="Textbox" style="opacity: 0.75; z-index: 10;">
                     <img class="mg-layer" src="keynextskip.png" alt="Next Skip" style="z-index: 11;">
-                    <div id="mg-dialog-area-3" class="mg-dialog-area">
-                        <div id="mg-dialog-name-3" class="mg-dialog-name">Natori:</div>
-                        <div id="mg-dialog-text-3" class="mg-dialog-text"></div>
+                    <div id="mg-dialog-area-1" class="mg-dialog-area">
+                        <div id="mg-dialog-name-1" class="mg-dialog-name"></div>
+                        <div id="mg-dialog-text-1" class="mg-dialog-text"></div>
                     </div>
-                    <div class="mg-hitbox" style="left: 448px; top: 192px; width: 32px; height: 32px; z-index: 12;" onclick="mg_handleDialogPhase3()"></div>
-                    <div class="mg-hitbox" style="left: 448px; top: 224px; width: 32px; height: 32px; z-index: 12;" onclick="mg_handleDialogPhase3()"></div>
+                    <div class="mg-hitbox" style="left: 448px; top: 192px; width: 32px; height: 32px; z-index: 12;" onclick="mg_handleNextPhase1()"></div>
+                    <div class="mg-hitbox" style="left: 448px; top: 224px; width: 32px; height: 32px; z-index: 12;" onclick="mg_handleSkipPhase1()"></div>
                 </div>
-                
-                <div id="mg-quiz-ui-container">
-                    <img class="mg-layer" src="keyabc.png" alt="Tombol ABC" style="z-index: 10;">
-                    <div id="mg-quiz-score" class="mg-quiz-text" style="left: 320px; top: 32px; width: 144px; height: 32px; justify-content: flex-end; color: #ffcc00; font-size: 18px; padding-right: 8px;">Skor = 0/4</div>
-                    <div id="mg-quiz-question" class="mg-quiz-text" style="left: 32px; top: 64px; width: 448px; height: 96px;"></div>
+
+                <div id="mg-phase2-container">
+                    <img class="mg-layer" src="kanvaspb.png" alt="Canvas Dasar">
+                    <img id="mg-anim-layer" class="mg-layer" src="pbh1o1.gif" alt="Animasi Reaksi" style="z-index: 2;">
+                    <img class="mg-layer" src="keypbplusminus.png" alt="UI Bawah" style="z-index: 10;">
+
+                    <div id="mg-phase2-interactables">
+                        <div id="mg-text-h" class="mg-text-box">H<sub>2(g)</sub></div>
+                        <div id="mg-text-o" class="mg-text-box">O<sub>2(g)</sub></div>
+                        <div id="mg-text-h2o" class="mg-text-box">H<sub>2</sub>O<sub>(l)</sub></div>
+
+                        <div class="mg-hitbox" style="left: 64px; top: 224px; width: 32px; height: 32px;" onclick="mg_updateReaktan('h', -1)"></div>
+                        <div class="mg-hitbox" style="left: 128px; top: 224px; width: 32px; height: 32px;" onclick="mg_updateReaktan('h', 1)"></div>
+                        <div class="mg-hitbox" style="left: 192px; top: 224px; width: 32px; height: 32px;" onclick="mg_updateReaktan('o', -1)"></div>
+                        <div class="mg-hitbox" style="left: 256px; top: 224px; width: 32px; height: 32px;" onclick="mg_updateReaktan('o', 1)"></div>
+
+                        <div class="mg-hitbox" style="left: 320px; top: 224px; width: 64px; height: 32px;" onclick="mg_openInfo()"></div>
+                        <div class="mg-hitbox" style="left: 384px; top: 224px; width: 64px; height: 32px;" onclick="mg_masukFase3()"></div>
+                    </div>
+
+                    <div id="mg-info-container" onclick="mg_closeInfo()">
+                        <img class="mg-layer" src="popupinfopb.png" alt="Layar Info" style="z-index: 51;">
+                    </div>
+                </div>
+
+                <div id="mg-phase3-container">
+                    <img class="mg-layer" src="kanvaspbexam.png" alt="Lab Exam Background" style="z-index: 1;">
+                    <img id="mg-sprite-natori-exam" class="mg-sprite active" src="natori_neutral.png" alt="Natori" style="z-index: 5;">
+                    <img id="mg-sprite-kurori-exam" class="mg-sprite hidden" src="kurori_victory.png" alt="Kurori" style="z-index: 5;">
+
+                    <div id="mg-ui-exam-dialog">
+                        <img class="mg-layer" src="txtbox.png" alt="Textbox" style="opacity: 0.75; z-index: 10;">
+                        <img class="mg-layer" src="keynextskip.png" alt="Next Skip" style="z-index: 11;">
+                        <div id="mg-dialog-area-3" class="mg-dialog-area">
+                            <div id="mg-dialog-name-3" class="mg-dialog-name">Natori:</div>
+                            <div id="mg-dialog-text-3" class="mg-dialog-text"></div>
+                        </div>
+                        <div class="mg-hitbox" style="left: 448px; top: 192px; width: 32px; height: 32px; z-index: 12;" onclick="mg_handleDialogPhase3()"></div>
+                        <div class="mg-hitbox" style="left: 448px; top: 224px; width: 32px; height: 32px; z-index: 12;" onclick="mg_handleDialogPhase3()"></div>
+                    </div>
                     
-                    <div class="mg-hitbox" style="left: 32px; top: 160px; width: 32px; height: 32px; z-index: 12;" onclick="mg_answerQuiz(0)"></div>
-                    <div class="mg-hitbox" style="left: 32px; top: 192px; width: 32px; height: 32px; z-index: 12;" onclick="mg_answerQuiz(1)"></div>
-                    <div class="mg-hitbox" style="left: 32px; top: 224px; width: 32px; height: 32px; z-index: 12;" onclick="mg_answerQuiz(2)"></div>
+                    <div id="mg-quiz-ui-container">
+                        <img class="mg-layer" src="keyabc.png" alt="Tombol ABC" style="z-index: 10;">
+                        <div id="mg-quiz-score" class="mg-quiz-text" style="left: 320px; top: 32px; width: 144px; height: 32px; justify-content: flex-end; color: #ffcc00; font-size: 18px; padding-right: 8px;">Skor = 0/4</div>
+                        <div id="mg-quiz-question" class="mg-quiz-text" style="left: 32px; top: 64px; width: 448px; height: 96px;"></div>
+                        
+                        <div class="mg-hitbox" style="left: 32px; top: 160px; width: 32px; height: 32px; z-index: 12;" onclick="mg_answerQuiz(0)"></div>
+                        <div class="mg-hitbox" style="left: 32px; top: 192px; width: 32px; height: 32px; z-index: 12;" onclick="mg_answerQuiz(1)"></div>
+                        <div class="mg-hitbox" style="left: 32px; top: 224px; width: 32px; height: 32px; z-index: 12;" onclick="mg_answerQuiz(2)"></div>
 
-                    <div id="mg-ans-0" class="mg-quiz-text mg-quiz-ans" style="left: 64px; top: 160px; width: 416px; height: 32px;"></div>
-                    <div id="mg-ans-1" class="mg-quiz-text mg-quiz-ans" style="left: 64px; top: 192px; width: 416px; height: 32px;"></div>
-                    <div id="mg-ans-2" class="mg-quiz-text mg-quiz-ans" style="left: 64px; top: 224px; width: 416px; height: 32px;"></div>
+                        <div id="mg-ans-0" class="mg-quiz-text mg-quiz-ans" style="left: 64px; top: 160px; width: 416px; height: 32px;"></div>
+                        <div id="mg-ans-1" class="mg-quiz-text mg-quiz-ans" style="left: 64px; top: 192px; width: 416px; height: 32px;"></div>
+                        <div id="mg-ans-2" class="mg-quiz-text mg-quiz-ans" style="left: 64px; top: 224px; width: 416px; height: 32px;"></div>
+                    </div>
+
+                    <div id="mg-result-ui-container">
+                        <img id="mg-result-img" class="mg-layer" src="" alt="Result Overlay" style="z-index: 20;">
+                        <div id="mg-hitbox-done" class="mg-hitbox" style="left: 192px; top: 224px; width: 128px; height: 32px; z-index: 21; display: none;" onclick="mg_selesaikanLobby()"></div>
+                        <div id="mg-hitbox-retry" class="mg-hitbox" style="left: 160px; top: 224px; width: 96px; height: 32px; z-index: 21; display: none;" onclick="mg_ulangiSimulasi()"></div>
+                        <div id="mg-hitbox-close" class="mg-hitbox" style="left: 256px; top: 224px; width: 96px; height: 32px; z-index: 21; display: none;" onclick="mg_selesaikanLobby()"></div>
+                    </div>
                 </div>
 
-                <div id="mg-result-ui-container">
-                    <img id="mg-result-img" class="mg-layer" src="" alt="Result Overlay" style="z-index: 20;">
-                    <div id="mg-hitbox-done" class="mg-hitbox" style="left: 192px; top: 224px; width: 128px; height: 32px; z-index: 21; display: none;" onclick="mg_selesaikanLobby()"></div>
-                    <div id="mg-hitbox-retry" class="mg-hitbox" style="left: 160px; top: 224px; width: 96px; height: 32px; z-index: 21; display: none;" onclick="mg_ulangiSimulasi()"></div>
-                    <div id="mg-hitbox-close" class="mg-hitbox" style="left: 256px; top: 224px; width: 96px; height: 32px; z-index: 21; display: none;" onclick="mg_selesaikanLobby()"></div>
+                <img class="mg-layer" src="keyexit.png" alt="Tombol Keluar" style="z-index: 40;"> 
+                <div class="mg-hitbox" style="left: 480px; top: 0px; width: 32px; height: 32px; z-index: 41;" onclick="mg_openExitPopup()"></div>
+
+                <div id="mg-dark-overlay"></div>
+                <div id="mg-popup-exit-container">
+                    <img class="mg-layer" src="popupexit.png" alt="Popup Konfirmasi" style="z-index: 62;">
+                    <div class="mg-hitbox" style="left: 160px; top: 160px; width: 96px; height: 32px; z-index: 65;" onclick="mg_selesaikanLobby()"></div>
+                    <div class="mg-hitbox" style="left: 256px; top: 160px; width: 96px; height: 32px; z-index: 65;" onclick="mg_closeExitPopup()"></div>
                 </div>
-            </div>
-
-            <img class="mg-layer" src="keyexit.png" alt="Tombol Keluar" style="z-index: 40;"> 
-            <div class="mg-hitbox" style="left: 480px; top: 0px; width: 32px; height: 32px; z-index: 41;" onclick="mg_openExitPopup()"></div>
-
-            <div id="mg-dark-overlay"></div>
-            <div id="mg-popup-exit-container">
-                <img class="mg-layer" src="popupexit.png" alt="Popup Konfirmasi" style="z-index: 62;">
-                <div class="mg-hitbox" style="left: 160px; top: 160px; width: 96px; height: 32px; z-index: 65;" onclick="mg_selesaikanLobby()"></div>
-                <div class="mg-hitbox" style="left: 256px; top: 160px; width: 96px; height: 32px; z-index: 65;" onclick="mg_closeExitPopup()"></div>
             </div>
         </div>
-
     </div>
 
     <script>
@@ -386,7 +408,7 @@
         
         // VARIABEL PROGRESI BINTANG
         let playerStars = 0;
-        let questProustDone = false; // Mencegah farming bintang di quest d6
+        let questProustDone = false; 
         
         const collisionMap = [
             [  1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1 ],
@@ -445,7 +467,7 @@
             else if (type === 'status') prefix = "status... ";
             else if (type === 'warning') prefix = "info: ";
             else if (type === 'iteminfo') prefix = "Informasi item: ";
-            else if (type === 'star') prefix = "status... "; // Prefix untuk bintang
+            else if (type === 'star') prefix = "status... "; 
 
             logContent.appendChild(logLine);
             const fullText = prefix + text;
@@ -479,7 +501,6 @@
             if (!triggeredEvents.doorLab && pos === '10,6') {
                 triggeredEvents.doorLab = true; addLog('status', 'melewati pintu laboratorium kimia dasar');
             }
-            // PEMULIHAN FITUR: Dialog Intro Natori
             if (!triggeredEvents.natoriIntro && pos === '9,6') {
                 triggeredEvents.natoriIntro = true;
                 addLog('kurori', 'permisi... apakah benar ini ruang laboratorium kimia?');
@@ -556,10 +577,8 @@
             if (isMoving) return; 
             const tilePos = `${currentCol},${currentRow}`;
 
-            // PEMICU MINIGAME PROUST
             if (tilePos === "3,5") { startMinigameProust(); return; }
 
-            // PEMULIHAN FITUR: Easter Egg Key & Door
             if (tilePos === "9,8" && !hasEggKey) {
                 hasEggKey = true; document.getElementById('egg-key').style.display = 'none';
                 addLog('mind', '*Kunci apa ini? Terasa sangat dingin... Natori sepertinya tidak menyadarinya.*');
@@ -602,7 +621,6 @@
         function startMinigameProust() {
             inMinigame = true;
             
-            // Transisi Masuk: 3 Detik Hitam
             const transOverlay = document.getElementById('transition-overlay');
             transOverlay.style.transition = 'opacity 3s ease';
             transOverlay.style.opacity = '1';
@@ -619,7 +637,6 @@
                 
                 mg_renderDialogPhase1();
                 
-                // Layar kembali terang instan untuk mulai minigame
                 transOverlay.style.transition = 'opacity 0.5s ease'; 
                 transOverlay.style.opacity = '0';
                 addLog('status', 'memasuki simulasi Hukum Proust');
@@ -836,7 +853,6 @@
         }
 
         function mg_selesaikanLobby() { 
-            // Transisi Keluar: 1 Detik Hitam
             const transOverlay = document.getElementById('transition-overlay');
             transOverlay.style.transition = 'opacity 1s ease';
             transOverlay.style.opacity = '1';
@@ -847,9 +863,8 @@
                 mg_currentPhase = 1; mg_h = 1; mg_o = 1;
                 clearInterval(mg_typeInterval); clearTimeout(mg_autoNextTimeout);
                 
-                transOverlay.style.opacity = '0'; // Layar kembali normal
+                transOverlay.style.opacity = '0'; 
                 
-                // SISTEM PENAMBAHAN BINTANG
                 if (mg_skor === 4 && !questProustDone) {
                     questProustDone = true;
                     playerStars++;
