@@ -20,16 +20,15 @@
             touch-action: none; /* Mencegah layar ter-scroll saat main di HP */
         }
 
-        /* GAME CONTAINER (Ukuran asli 512x288 yang di-scale up otomatis) */
+        /* GAME CONTAINER (Ukuran asli 512x288) */
         #game-container {
-            position: relative; /* Wajib relative agar isi absolute tidak berantakan */
+            position: relative; 
             width: 512px; height: 288px; 
             background-image: url('kanvaslab.png');
             background-size: cover; image-rendering: pixelated;
             border: 2px solid #555; box-shadow: 0 0 20px rgba(0,0,0,0.5); overflow: hidden; 
             
-            /* Trik Sihir: Skala dinamis mengikuti batas layar tanpa merusak koordinat X/Y */
-            transform: scale(min(100vw / 512, 100svh / 288)); 
+            /* CSS Transform scale() DIHAPUS. Kita gunakan JavaScript agar 100% akurat lintas browser */
             transform-origin: center center;
         }
 
@@ -379,6 +378,22 @@
     </div>
 
     <script>
+        // ================= SISTEM AUTO-SCALE =================
+        function resizeGame() {
+            const gameContainer = document.getElementById('game-container');
+            // Menghitung skala terkecil agar pas di layar tanpa merusak rasio (16:9)
+            // Menggunakan window.innerHeight agar aman dari address bar mobile
+            const scale = Math.min(window.innerWidth / 512, window.innerHeight / 288);
+            gameContainer.style.transform = `scale(${scale})`;
+        }
+        
+        // Memaksa game menghitung ulang ukuran saat layar HP diputar/di-resize
+        window.addEventListener('resize', resizeGame);
+        
+        // Panggil fungsi ini sekali saat game pertama kali dimuat
+        resizeGame();
+        // =====================================================
+
         // ================= VARIABEL MAIN GAME =================
         const playerElement = document.getElementById('player');
         const cutsceneLayer = document.getElementById('cutscene-layer');
